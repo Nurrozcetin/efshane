@@ -1,15 +1,179 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-generator client {
-  provider = "prisma-client-js"
+model User {
+  id                Int       @default(autoincrement()) @id
+  email             String    @unique
+  username          String
+  password          String
+  age               Int
+  image             String
+  image_background  String
+  about             String?
+  announcement      Announcement[]
+  book              Book[]
+  audioBook         AudioBook[]
+  following         Following[] @relation("Following")
+  followers         Following[] @relation("UserFollowers")
+  receiver          Messages[] @relation("Receiver")
+  sender            Messages[] @relation("Sender")
+  progress          ReadingProgress[]
+  article           Article[]
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+model Announcement {
+  id        Int     @default(autoincrement()) @id
+  title     String
+  content   String
+  authorId  Int     @unique
+  author    User    @relation(fields: [authorId], references: [id])
 }
 
+model Book {
+  id          Int         @default(autoincrement()) @id
+  title       String
+  section     Section[]
+  analysis    Analysis[]
+  date        DateTime
+  bookCover  String
+  comments    Comments[]
+  publish     Boolean     @default(false)
+  hashtag     Hashtags[]
+  audioBook   AudioBook[]
+  category    Category[]
+  privateNote PrivateNotes[]
+  progress    ReadingProgress[]
+  userId      Int
+  user        User        @relation(fields: [userId], references: [id])
+}
+
+model Section {
+  id         Int         @default(autoincrement()) @id
+  title      String
+  content    String
+  bookId     Int
+  book       Book        @relation(fields: [bookId], references: [id])
+  analysis   Analysis[]
+  comments   Comments[]
+}
+
+model Analysis {
+  id           Int       @default(autoincrement()) @id
+  like_count   Int
+  view_count   Int
+  read_count   Int
+  sectionId    Int
+  section      Section  @relation(fields: [sectionId], references: [id])
+  bookId       Int
+  book         Book     @relation(fields: [bookId], references: [id])
+  articleId    Int
+  article      Article  @relation(fields: [articleId], references: [id])
+  
+}
+
+model Comments {
+  id         Int       @default(autoincrement()) @id
+  content    String
+  date       DateTime
+  bookId     Int
+  book       Book      @relation(fields: [bookId], references: [id])
+  sectionId  Int
+  section    Section   @relation(fields: [sectionId], references: [id])
+}
+
+model Following {
+  id            Int      @default(autoincrement()) @id
+  date          DateTime
+  followersId   Int
+  followingId   Int
+  follower      User    @relation("UserFollowers", fields: [followersId], references: [id])
+  following     User    @relation("Following", fields: [followingId], references: [id])
+  @@unique([followersId, followingId]) // Aynı kullanıcı çiftinin birden fazla ilişki kurmasını engeller
+}
+
+model Messages {
+  id          Int      @default(autoincrement()) @id
+  date        DateTime
+  content     String
+  receiverId  Int
+  senderId    Int
+  receiver    User    @relation("Receiver", fields: [receiverId], references: [id])
+  sender      User    @relation("Sender", fields: [senderId], references: [id])
+}
+
+model Hashtags {
+  id         Int       @default(autoincrement()) @id
+  name       String
+  bookId     Int?
+  book       Book?    @relation(fields: [bookId], references: [id])
+  audioBookId Int?
+  audioBook  AudioBook? @relation(fields: [audioBookId], references: [id])
+  articleId  Int
+  article   Article   @relation(fields: [articleId], references: [id])
+}
+
+model AudioBook {
+  id         Int       @default(autoincrement()) @id
+  title      String
+  episodes   String
+  images     String
+  duration   String
+  bookCover  String
+  date       DateTime @default(now())
+  bookId     Int?
+  book       Book?    @relation(fields: [bookId], references: [id])
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  hashtags   Hashtags[]
+  category   Category[]
+}
+
+model Category {
+  id         Int       @default(autoincrement()) @id
+  name       String
+  bookId     Int?
+  book       Book?    @relation(fields: [bookId], references: [id])
+  audioBookId Int?
+  audioBook  AudioBook? @relation(fields: [audioBookId], references: [id])
+}
+
+model ReadingProgress {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  bookId    Int
+  date    DateTime @default(now())
+  user      User    @relation(fields: [userId], references: [id])
+  book      Book    @relation(fields: [bookId], references: [id])
+  @@unique([userId, bookId])
+}
+
+model Article {
+  id        Int      @id @default(autoincrement())
+  title   String
+  content   String
+  userId    Int
+  author    User  @relation(fields: [userId], references: [id])
+  date    DateTime
+  analysis Analysis[]
+  hashtags Hashtags[]
+}
+
+model Dictionary {
+  id        Int      @id @default(autoincrement())
+  word    String 
+  definition    String
+  part_of_speech    Speech[]
+  date    DateTime
+  sentence    String
+}
+
+model Speech { //isim, sifat, zarf
+  id        Int      @id @default(autoincrement())
+  name  String
+  dictId Int
+  dict  Dictionary @relation(fields: [dictId], references: [id])
+}
+
+model PrivateNotes{
+  id        Int      @id @default(autoincrement())
+  content   String
+  bookId  Int
+  book  Book  @relation(fields: [bookId], references: [id])
+}

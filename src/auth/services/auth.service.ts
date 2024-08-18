@@ -1,9 +1,8 @@
-import {Injectable } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { UserService } from "src/users/users.service";
-import { PasswordService } from "./password.service";
+import { JwtService } from "@nestjs/jwt";
 import { IPayload } from "../constants/types";
-import { access } from "fs";
+import { PasswordService } from "./password.service";
 import { CreateUserDto } from "src/users/dto/create-user.dto";
 
 @Injectable()
@@ -14,25 +13,30 @@ export class AuthService{
         private passwordService: PasswordService,
     ) {}
 
-    async validateUser(email: string, password:string): Promise<any> {
-        const user = await this. userService.getUserByEmail(email);
-        const comparePassword = await this.passwordService.compare(
-            password,
-            user.password,
-        );
-        if(user && comparePassword){
-            const{password, ...result} = user;
-            return result;
+    async validateUser(email: string, password: string): Promise<any> {
+        const user = await this.userService.getUserByEmail(email);
+        if (!user) {
+            console.log('User not found');
+            return null;
         }
-        return null;
+    
+        const isPasswordValid = await this.passwordService.compare(password, user.password);
+        if (!isPasswordValid) {
+            console.log('The password is invalid');
+            return null;
+        }
+    
+        console.log('User:', user);
+        return user;
     }
-
+    
     async login(user:any) {
         const payload: IPayload = {
             sub: user.id,
             email: user.email,
         };
         const token = this.jwtService.sign(payload)
+        console.log(token);
         return {
             accessToken: token,
         };
@@ -41,13 +45,15 @@ export class AuthService{
     async register(createUserDto: CreateUserDto) {
         const user = await this.userService.createUser(createUserDto);
         const payload: IPayload = {
-            sub: user.id,
-            email: user.email,
+          sub: user.id,
+          email: user.email,
         };
-        const token = this.jwtService.sign(payload);
-          return {
+        const token = this.jwtService.sign(payload)
+        console.log(token);
+        return {
             accessToken: token,
         };
-    }
-}
+      }
 
+    
+}

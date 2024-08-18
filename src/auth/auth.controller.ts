@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Post, Request, UseGuards } from "@nestjs/common";
-import { LocalAuthGuard } from "./guards/local.guards";
-import { AuthService } from "./services/auth.service";
-import { CreateUserDto } from "src/users/dto/create-user.dto";
-import { JwtAuthguard } from "./guards/jwt.guards";
+import { Controller, Get, Post, UseGuards, Request, Body, UnauthorizedException } from '@nestjs/common';
+import { AuthService } from './services/auth.service';
+import { LocalAuthGuard } from './guards/local.guards';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { JwtAuthGuard } from './guards/jwt.guards';
+
 
 @Controller('/auth')
 export class AuthController {
@@ -11,15 +12,22 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('/login')
   async login(@Request() req) {
-    return this.authService.login(req.user);
+      console.log('login olucaz');
+      console.log('Request User:', req.user); // req.user'ın içeriğini kontrol edin
+      if (!req.user) {
+          throw new UnauthorizedException('User not found');
+      }
+      return this.authService.login(req.user);
   }
+
 
   @Post('/register')
   async register(@Body() createUserDto: CreateUserDto) {
+    console.log('register olucaz')
     return this.authService.register(createUserDto);
   }
 
-  @UseGuards(JwtAuthguard)
+  @UseGuards(JwtAuthGuard)
   @Get('/protected')
   protect(@Request() req) {
     return {

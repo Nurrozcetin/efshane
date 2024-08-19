@@ -25,8 +25,6 @@ export class AuthService{
             console.log('The password is invalid');
             return null;
         }
-    
-        console.log('User:', user);
         return user;
     }
     
@@ -36,7 +34,6 @@ export class AuthService{
             email: user.email,
         };
         const token = this.jwtService.sign(payload)
-        console.log(token);
         return {
             accessToken: token,
         };
@@ -49,7 +46,6 @@ export class AuthService{
           email: user.email,
         };
         const token = this.jwtService.sign(payload)
-        console.log(token);
         return {
             accessToken: token,
         };

@@ -1,3 +1,4 @@
+import { BlacklistService } from './services/blacklist.service';
 import { Controller, Get, Post, UseGuards, Request, Body, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './services/auth.service';
 import { LocalAuthGuard } from './guards/local.guards';
@@ -7,24 +8,32 @@ import { JwtAuthGuard } from './guards/jwt.guards';
 
 @Controller('/auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly blacklistService: BlacklistService
+  ) {}
+
+  @Post('/register')
+  async register(@Body() createUserDto: CreateUserDto) {
+    return this.authService.register(createUserDto);
+  }
 
   @UseGuards(LocalAuthGuard)
   @Post('/login')
   async login(@Request() req) {
-      console.log('login olucaz');
-      console.log('Request User:', req.user); // req.user'ın içeriğini kontrol edin
       if (!req.user) {
           throw new UnauthorizedException('User not found');
       }
       return this.authService.login(req.user);
   }
 
-
-  @Post('/register')
-  async register(@Body() createUserDto: CreateUserDto) {
-    console.log('register olucaz')
-    return this.authService.register(createUserDto);
+  @Post('/logout') 
+  async logout(@Request() req) {
+    const token = req.headers['authorization']?.replace('Bearer', '');
+    if(token) {
+      this.blacklistService.addToken(token);
+    }
+    return  { message: 'Logged out successfully' };
   }
 
   @UseGuards(JwtAuthGuard)

@@ -23,7 +23,7 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('/login')
-  async login(@Request() req) {
+  async login(@Body() createUserDto: CreateUserDto, @Request() req) {
       if (!req.user) {
           throw new UnauthorizedException('User not found');
       }

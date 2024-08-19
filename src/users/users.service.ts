@@ -1,3 +1,4 @@
+import { PasswordService } from './../auth/services/password.service';
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma, User } from "@prisma/client";
 import { PrismaService } from "prisma/prisma.service";
@@ -7,6 +8,7 @@ import { CreateUserDto } from "./dto/create-user.dto";
 export class UserService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly passwordService: PasswordService,
   ) {}
 
   async getAllUsers(){
@@ -38,6 +40,28 @@ export class UserService {
     }
     return user;
   }
+
+  async getUserById(id: string) {
+    const user = await this.prisma.user.findUnique({
+        where: { id:parseInt(id)},
+    });
+    if (!user) {
+        throw new NotFoundException();
+    }
+    return user;
+}
+
+async updatePassword(id:string, newPass: string) {
+  const user = await this.getUserById(id);
+  const hashedPass = await this.passwordService.hashPassword(newPass);
+  
+  await this.prisma.user.update({
+    where: { id: user.id },
+    data: { password: hashedPass },
+  });
+
+  return { message: 'Updated password' };
+}
 
   async deleteUserById(id:number){
     return this.prisma.user.delete({

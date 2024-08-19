@@ -1,4 +1,5 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { ChangePassword } from './../../users/dto/change-pass.dto';
+import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { UserService } from "src/users/users.service";
 import { JwtService } from "@nestjs/jwt";
 import { IPayload } from "../constants/types";
@@ -20,7 +21,7 @@ export class AuthService{
             return null;
         }
     
-        const isPasswordValid = await this.passwordService.hashPassword(user.password);
+        const isPasswordValid = await this.passwordService.hashandComparePassword(user.password);
         if (!isPasswordValid) {
             console.log('The password is invalid');
             return null;
@@ -50,6 +51,4 @@ export class AuthService{
             accessToken: token,
         };
       }
-
-    
 }

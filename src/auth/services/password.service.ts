@@ -9,17 +9,12 @@ export class PasswordService {
         private userService: UserService,
     ){}
 
-    async hashPassword(password: string): Promise<string> {
+    async hashPassword(password: string) {
         const salt = await genSalt(10);
         console.log('Salt:', salt)
-        return hash(password, salt);
-    }
-
-    async compare(
-        provided: string,
-        stored: string,
-    ): Promise<boolean> {
-        return compare(provided, stored);
+        const hashed = await hash(password, salt);
+        const compared = await compare(password, hashed)
+        return compared;
     }
     
 }

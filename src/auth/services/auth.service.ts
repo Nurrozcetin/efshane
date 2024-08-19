@@ -20,7 +20,7 @@ export class AuthService{
             return null;
         }
     
-        const isPasswordValid = await this.passwordService.compare(password, user.password);
+        const isPasswordValid = await this.passwordService.hashPassword(user.password);
         if (!isPasswordValid) {
             console.log('The password is invalid');
             return null;

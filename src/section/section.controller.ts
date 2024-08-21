@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
 import { SectionService } from "./section.service";
 import { CreateSectionDto } from "./dto/create-section.dto";
 
@@ -21,6 +21,14 @@ export class SectionController {
     @Get(':bookId')
     getSectionByBookId(@Param('bookId') bookId:number){
         return this.sectionService.getAllSectionsByBookId(String(bookId));
+    }
+
+    @Put(':bookId/:sectionId') 
+        updateSection(@Param('bookId') bookId:number,
+                      @Param('sectionId')  sectionId:number, 
+                      @Body() body: CreateSectionDto
+    ) {
+        return this.sectionService.updateSection(String(bookId), String(sectionId), body);
     }
 
     @Delete(':bookId')

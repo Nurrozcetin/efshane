@@ -37,6 +37,17 @@ export class SectionService {
         return sections;
     }
 
+    async updateSection(bookId: string, sectionId: string, updateData: any) {
+        const updatedSection = await this.prisma.section.updateMany({
+            where: {
+                id: parseInt(sectionId, 10),
+                bookId: parseInt(bookId, 10),
+            },
+            data: updateData,
+        });
+        return updatedSection;
+    }
+
     async deleteAllSectionsByBookId(bookId: string) {
         const sections = await this.prisma.section.deleteMany({
             where: {

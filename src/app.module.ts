@@ -10,10 +10,13 @@ import { AuthModule } from './auth/auth.module';
 import { SectionModule } from './section/section.module';
 import { SectionController } from './section/section.controller';
 import { SectionService } from './section/section.service';
+import { NotesModule } from './note/note.module';
+import { NotesController } from './note/note.controller';
+import { NotesServices } from './note/note.service';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, SectionModule],
-  controllers: [AppController, UserController, AuthController, SectionController],
-  providers: [AppService, UserService, SectionService],
+  imports: [PrismaModule, UsersModule, AuthModule, SectionModule, NotesModule],
+  controllers: [AppController, UserController, AuthController, SectionController, NotesController],
+  providers: [AppService, UserService, SectionService, NotesServices],
 })
 export class AppModule {}

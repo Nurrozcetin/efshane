@@ -137,7 +137,7 @@ model AudioBook {
 
 model Category {
   id         Int       @default(autoincrement()) @id
-  name       String
+  name       String    @unique
   bookId     Int?
   book       Book?    @relation(fields: [bookId], references: [id])
   audioBookId Int?

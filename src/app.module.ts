@@ -13,10 +13,13 @@ import { SectionService } from './section/section.service';
 import { NotesModule } from './note/note.module';
 import { NotesController } from './note/note.controller';
 import { NotesServices } from './note/note.service';
+import { DictionaryModule } from './dictionary/dictionary.module';
+import { DictionaryController } from './dictionary/dictionary.controller';
+import { DictionaryServices } from './dictionary/dictionary.service';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, SectionModule, NotesModule],
-  controllers: [AppController, UserController, AuthController, SectionController, NotesController],
-  providers: [AppService, UserService, SectionService, NotesServices],
+  imports: [PrismaModule, UsersModule, AuthModule, SectionModule, NotesModule, DictionaryModule],
+  controllers: [AppController, UserController, AuthController, SectionController, NotesController, DictionaryController],
+  providers: [AppService, UserService, SectionService, NotesServices, DictionaryServices],
 })
 export class AppModule {}

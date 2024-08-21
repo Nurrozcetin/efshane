@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Delete, Put } from "@nestjs/common";
 import { NotesServices } from "./note.service";
 import { CreatePrivateNoteDto } from "./dto/create-note.dto";
 
@@ -16,6 +16,22 @@ export class NotesController{
     @Get(':bookId')
     async getNotesByBookId(@Param('bookId')  bookId: number){
         return this.notesService.getAllNotesByBookId(String(bookId));
+    }
+
+    @Delete(':bookId/:notesId')
+    async deleteNotesByBookId(@Param('bookId')  bookId: number,
+    @Param('notesId')  notesId: number,
+    @Body() body: CreatePrivateNoteDto
+    ){
+        return this.notesService.deleteAllNotesByBookId(String(bookId), String(notesId));
+    }
+
+    @Put(':bookId/:notesId')
+    async updateAllNotesByBookId(@Param('bookId')  bookId: number,
+    @Param('notesId')  notesId: number,
+    @Body() body: CreatePrivateNoteDto
+    ){
+        return this.notesService.updateAllNotesByBookId(String(bookId), String(notesId), body);
     }
 
 }

@@ -31,4 +31,24 @@ export class NotesServices {
         return notes;
     }
 
+    async deleteAllNotesByBookId(bookId: string, notesId: string){
+        const notes = await this.prisma.privateNotes.deleteMany({
+            where: {
+                id: parseInt(notesId, 10),
+                bookId: parseInt(bookId, 10),
+            },
+        });
+        return notes;
+    }
+
+    async updateAllNotesByBookId(bookId: string, notesId: string, updateData: any){
+        const notes = await this.prisma.privateNotes.updateMany({
+            where: {
+                id: parseInt(notesId, 10),
+                bookId: parseInt(bookId, 10),
+            },
+            data: updateData,
+        });
+        return notes;
+    }
 }

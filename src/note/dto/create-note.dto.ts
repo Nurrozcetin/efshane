@@ -1,6 +1,6 @@
 import { IsInt, IsNotEmpty, isNotEmpty, IsString } from "class-validator";
 
-export class CreateNoteDto {
+export class CreatePrivateNoteDto {
     id: string;
 
     @IsNotEmpty()

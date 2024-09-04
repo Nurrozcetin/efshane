@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, isNotEmpty, IsString } from "class-validator";
+import { IsInt, IsNotEmpty, IsString } from "class-validator";
 
 export class CreatePrivateNoteDto {
     id: string;
@@ -10,4 +10,5 @@ export class CreatePrivateNoteDto {
     @IsNotEmpty()
     @IsInt()
     bookId: number;
+    userId: number;
 }

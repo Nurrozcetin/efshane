@@ -12,10 +12,11 @@ import { NotesController } from './note/note.controller';
 import { NotesServices } from './note/note.service';
 import { AnalysisService } from './analysis/analysis.service';
 import { AnalysisModule } from './analysis/analysis.module';
+import { AnalysisController } from './analysis/analysis.controller';
 
 @Module({
   imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule],
-  controllers: [AppController, UserController, AuthController, NotesController, AnalysisModule],
+  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController],
   providers: [AppService, UserService, NotesServices, AnalysisService],
 })
 export class AppModule {}

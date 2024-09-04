@@ -16,14 +16,14 @@ export class UserService {
   }
 
   async createUser(createUserDto:CreateUserDto): Promise<User> {
-    const { email, username, password, age, image, image_background, about } = createUserDto;
+    const { email, username, password, age, profile_image, image_background, about } = createUserDto;
     const user = await this.prisma.user.create({
       data: {
         email,
         username,
         password,
         age,
-        image,
+        profile_image,
         image_background,
         about
       },
@@ -70,16 +70,15 @@ async updatePassword(id:string, newPass: string) {
   }
 
   async updateUserById(createUserDto:CreateUserDto, id:number): Promise<User> {
-    const { email, username, password, age, image, image_background, about } = createUserDto;
-    
+    const { email, username, password, age, profile_image, image_background, about } = createUserDto;
     const user = await this.prisma.user.update({
       where: {id},
       data: {
         email,
         username,
         password,
+        profile_image,
         age,
-        image,
         image_background,
         about
       },

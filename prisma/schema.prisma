@@ -23,10 +23,14 @@ model User {
   audioBook         AudioBook[]
   following         Following[] @relation("Following")
   followers         Following[] @relation("UserFollowers")
-  receiver          Messages[] @relation("Receiver")
-  sender            Messages[] @relation("Sender")
+  receiver          Messages[]  @relation("Receiver")
+  sender            Messages[]  @relation("Sender")
   progress          ReadingProgress[]
   privateNotes      PrivateNotes[]
+  library           Library?
+  bookCase          BookCase?
+  readingListId     Int?
+  readingList       ReadingList?  @relation(fields: [readingListId], references: [id])
 }
 
 model Announcement {
@@ -34,7 +38,7 @@ model Announcement {
   title       String
   content     String
   date        DateTime @default(now()) 
-  authorId    Int     @unique
+  authorId    Int     
   author      User    @relation(fields: [authorId], references: [id])
 }
 
@@ -45,7 +49,6 @@ model Book {
   analysis          Analysis[]
   publish_date      DateTime    @default(now())
   bookCover         String
-  page              Int         @default(0)
   comments          Comments[]
   publish           Boolean     @default(false)
   hashtag           Hashtags[]
@@ -55,6 +58,12 @@ model Book {
   progress          ReadingProgress[]
   userId            Int
   user              User        @relation(fields: [userId], references: [id])
+  libraryId         Int
+  library           Library     @relation(fields: [libraryId], references: [id])
+  bookCaseId        Int
+  bookCase          BookCase    @relation(fields: [bookCaseId], references: [id])
+  readingListId     Int
+  readingList       ReadingList  @relation(fields: [readingListId], references: [id])
 }
 
 model Section {
@@ -92,7 +101,7 @@ model Comments {
 
 model Following {
   id            Int      @default(autoincrement()) @id
-  date          DateTime
+  date          DateTime @default(now())
   followersId   Int
   followingId   Int
   follower      User    @relation("UserFollowers", fields: [followersId], references: [id])
@@ -102,7 +111,7 @@ model Following {
 
 model Messages {
   id          Int      @default(autoincrement()) @id
-  date        DateTime
+  date        DateTime @default(now())
   content     String
   receiverId  Int
   senderId    Int
@@ -132,6 +141,12 @@ model AudioBook {
   user            User     @relation(fields: [userId], references: [id])
   hashtags        Hashtags[]
   category        Category[]
+  libraryId       Int
+  library         Library     @relation(fields: [libraryId], references: [id])
+  bookCaseId      Int
+  bookCase        BookCase    @relation(fields: [bookCaseId], references: [id])
+  readingListId     Int
+  readingList       ReadingList  @relation(fields: [readingListId], references: [id])
 }
 
 model Category {
@@ -159,5 +174,28 @@ model PrivateNotes{
   userId    Int
   user      User      @relation(fields: [userId], references: [id])
   bookId    Int
-  book      Book  @relation(fields: [bookId], references: [id])
+  book      Book     @relation(fields: [bookId], references: [id])
+}
+
+model Library { //kullanicinin yazdigi/seslendirdigi tum kitaplar
+  id            Int         @id @default(autoincrement())
+  books         Book[]
+  audioBooks    AudioBook[]
+  userId        Int         @unique
+  user          User        @relation(fields: [userId], references: [id])
+}
+
+model BookCase { //kullanicinin okudugu/dinledigi ve okumaya/dinlemeye devam ettigi kitaplar
+  id            Int       @id @default(autoincrement())
+  books         Book[]
+  audioBooks    AudioBook[]
+  userId        Int         @unique
+  user          User        @relation(fields: [userId], references: [id])
+}
+
+model ReadingList {
+  id        Int       @id @default(autoincrement())
+  books         Book[]
+  audioBooks    AudioBook[]
+  user          User[]
 }

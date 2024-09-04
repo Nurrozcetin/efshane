@@ -4,7 +4,7 @@ export class UserEntity {
     username: string; 
     password: string;
     age: number;
-    image: string;
+    profile_image: string;
     image_background: string;
     about?: string;
 }

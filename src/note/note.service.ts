@@ -8,19 +8,20 @@ export class NotesServices {
         private readonly prisma:PrismaService
     ) {}
 
-    async createPrivateNotes(createPrivateNoteDto:CreatePrivateNoteDto) {
-        const {content, bookId} = createPrivateNoteDto;
+    /*async createPrivateNote(content: string, bookId: number) {
         return this.prisma.privateNotes.create({
-            data: {
-                content, 
-                bookId
-            }
+          data: {
+            content,
+            bookId, 
+          },
         });
-    }
+      }*/
+      
 
-    async getAllNotesByBookId(bookId: string){
+    async getAllNotesByBookId(userId: string, bookId: string){
         const notes = await this.prisma.privateNotes.findMany({
             where:{
+                userId: parseInt(userId, 10),
                 bookId: parseInt(bookId, 10),
             },
         });

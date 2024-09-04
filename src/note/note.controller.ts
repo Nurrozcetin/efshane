@@ -8,16 +8,19 @@ export class NotesController{
         private readonly notesService: NotesServices,
     ){}
 
-    @Post()
+    /*@Post()
     async createPrivateNotes(@Body() body: CreatePrivateNoteDto) {
         return this.notesService.createPrivateNotes(body);
-    }
+    }*/
 
-    @Get(':bookId')
-    async getNotesByBookId(@Param('bookId')  bookId: number){
-        return this.notesService.getAllNotesByBookId(String(bookId));
+    @Get(':userId/:bookId')
+    async getNotesByBookId(
+        @Param('userId') userId: number,
+        @Param('bookId') bookId: number,
+    ) {
+        return this.notesService.getAllNotesByBookId(String(userId), String(bookId));
     }
-
+        
     @Delete(':bookId/:notesId')
     async deleteNotesByBookId(@Param('bookId')  bookId: number,
     @Param('notesId')  notesId: number,

@@ -1,18 +1,26 @@
-import { Body, Controller, Get, Param, Post, Delete, Put } from "@nestjs/common";
-import { NotesServices } from "./note.service";
+import { Body, Controller, Get, Param, Post, Delete, Put, UseGuards, Req } from "@nestjs/common";
 import { CreatePrivateNoteDto } from "./dto/create-note.dto";
+import { JwtAuthGuard } from "src/auth/guards/jwt.guards";
+import { PrivateNotesService } from "./note.service";
 
 @Controller('notes')
 export class NotesController{
     constructor(
-        private readonly notesService: NotesServices,
+        private readonly notesService: PrivateNotesService,
     ){}
 
-    /*@Post()
-    async createPrivateNotes(@Body() body: CreatePrivateNoteDto) {
-        return this.notesService.createPrivateNotes(body);
-    }*/
+    @UseGuards(JwtAuthGuard)
+    @Post()
+    async createPrivateNotes(
+    @Param('bookId') bookId: number, 
+    @Body() body: CreatePrivateNoteDto,
+    @Req() req) 
+    {
+        const userId = req.user.id; // JWT'den gelen kullanıcı ID'sini al
+        return this.notesService.createPrivateNote(body, userId);
+    }
 
+    @UseGuards(JwtAuthGuard)
     @Get(':userId/:bookId')
     async getNotesByBookId(
         @Param('userId') userId: number,
@@ -21,6 +29,7 @@ export class NotesController{
         return this.notesService.getAllNotesByBookId(String(userId), String(bookId));
     }
         
+    @UseGuards(JwtAuthGuard)
     @Delete(':bookId/:notesId')
     async deleteNotesByBookId(@Param('bookId')  bookId: number,
     @Param('notesId')  notesId: number,
@@ -29,6 +38,7 @@ export class NotesController{
         return this.notesService.deleteAllNotesByBookId(String(bookId), String(notesId));
     }
 
+    @UseGuards(JwtAuthGuard)
     @Put(':bookId/:notesId')
     async updateAllNotesByBookId(@Param('bookId')  bookId: number,
     @Param('notesId')  notesId: number,

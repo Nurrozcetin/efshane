@@ -38,6 +38,7 @@ model Announcement {
   title       String
   content     String
   date        DateTime @default(now()) 
+  deletedAt   DateTime?
   authorId    Int     
   author      User    @relation(fields: [authorId], references: [id])
 }

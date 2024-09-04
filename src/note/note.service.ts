@@ -1,23 +1,33 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { PrismaService } from "prisma/prisma.service";
-import { CreatePrivateNoteDto } from "./dto/create-note.dto";
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'prisma/prisma.service';
+import { CreatePrivateNoteDto } from './dto/create-note.dto';
 
 @Injectable()
-export class NotesServices {
-    constructor(
-        private readonly prisma:PrismaService
-    ) {}
+export class PrivateNotesService {
+  constructor(private readonly prisma: PrismaService) {}
 
-    /*async createPrivateNote(content: string, bookId: number) {
-        return this.prisma.privateNotes.create({
-          data: {
-            content,
-            bookId, 
-          },
-        });
-      }*/
-      
+  async createPrivateNote(
+    createPrivateNoteDto: CreatePrivateNoteDto,
+    userId: number,
+  ) {
+    const { content, bookId } = createPrivateNoteDto;
+    const book = await this.prisma.book.findUnique({
+      where: { id: bookId },
+    });
 
+    if (!book) {
+      throw new NotFoundException('Book not found');
+    }
+    const privateNote = await this.prisma.privateNotes.create({
+      data: {
+        content,
+        userId,
+        bookId,
+        date: new Date(),
+      },
+    });
+    return privateNote;
+  }
     async getAllNotesByBookId(userId: string, bookId: string){
         const notes = await this.prisma.privateNotes.findMany({
             where:{
@@ -53,3 +63,4 @@ export class NotesServices {
         return notes;
     }
 }
+

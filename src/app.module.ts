@@ -9,14 +9,17 @@ import { AuthController } from './auth/auth.controller';
 import { AuthModule } from './auth/auth.module';
 import { NotesModule } from './note/note.module';
 import { NotesController } from './note/note.controller';
-import { NotesServices } from './note/note.service';
 import { AnalysisService } from './analysis/analysis.service';
 import { AnalysisModule } from './analysis/analysis.module';
 import { AnalysisController } from './analysis/analysis.controller';
+import { AnnouncementModule } from './announcement/anons.module';
+import { AnnouncementController } from './announcement/annons.controller';
+import { AnnouncementService } from './announcement/anons.service';
+import { PrivateNotesService } from './note/note.service';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule],
-  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController],
-  providers: [AppService, UserService, NotesServices, AnalysisService],
+  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule],
+  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController],
+  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService],
 })
 export class AppModule {}

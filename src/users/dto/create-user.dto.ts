@@ -9,10 +9,10 @@ export class CreateUserDto{
     username: string; 
 
     @IsNotEmpty({ message: 'Password can not empty!' })
-    @Matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, {
-    message: 'Password cannot be empty. Password must contain at least one uppercase letter, one number and one special character.',
-  })
-  password: string;
+    /*@Matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/, {
+      message: 'Password must contain at least one uppercase letter, one number, and one special character.'
+    })*/  
+    password: string;
 
     @IsInt()
     age: number;

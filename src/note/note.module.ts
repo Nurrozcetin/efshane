@@ -1,9 +1,9 @@
 import { Module } from "@nestjs/common";
-import { NotesServices } from "./note.service";
 import { PrismaService } from "prisma/prisma.service";
+import { PrivateNotesService } from "./note.service";
 
 Module({
-    providers: [NotesServices, PrismaService],
-    exports: [NotesServices],
+    providers: [PrivateNotesService, PrismaService],
+    exports: [PrivateNotesService],
 })
 export class NotesModule {}

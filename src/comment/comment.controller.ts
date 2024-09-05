@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Req, UseGuards } from "@nestjs/common";
 import { CommentService } from "./comment.service";
 import { JwtAuthGuard } from "src/auth/guards/jwt.guards";
 import { CreateCommentDto } from "./dto/create-comment.dto";
@@ -46,4 +46,31 @@ export  class CommentController {
         const userId = req.user.id; 
         return this.commentService.deleteCommentsBySectionId(bookId, sectionId, commentId, userId);
     }
+
+    @UseGuards(JwtAuthGuard)
+    @Put(':bookId/:commentId')
+    async updateCommentsByBookId(
+        @Param('bookId') bookId: string,
+        @Param('commentId') commentId: string,
+        @Body() body: CreateCommentDto,
+        @Req() req
+    ) {
+        const userId = req.user.id; 
+        return this.commentService.updateCommentsByBookId(bookId, commentId, body, userId);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Put(':bookId/:sectionId/:commentId')
+    async updateCommentsBySectionId(
+        @Param('bookId') bookId: string,
+        @Param('sectionId') sectionId: string,
+        @Param('commentId') commentId: string,
+        @Body() body: CreateCommentDto,
+        @Req() req
+    ) {
+        const userId = req.user.id; 
+        return this.commentService.updateCommentsBySectionId(bookId, sectionId, commentId, body, userId);
+    }
 }
+
+

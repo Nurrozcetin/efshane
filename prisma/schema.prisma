@@ -27,10 +27,10 @@ model User {
   sender            Messages[]  @relation("Sender")
   progress          ReadingProgress[]
   privateNotes      PrivateNotes[]
+  section           Section[]
   library           Library?
   bookCase          BookCase?
-  readingListId     Int?
-  readingList       ReadingList?  @relation(fields: [readingListId], references: [id])
+  readingList       ReadingList?
 }
 
 model Announcement {
@@ -40,7 +40,7 @@ model Announcement {
   date        DateTime @default(now()) 
   deletedAt   DateTime?
   authorId    Int     
-  author      User    @relation(fields: [authorId], references: [id])
+  author      User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
 model Book {
@@ -74,6 +74,8 @@ model Section {
   date       DateTime    @default(now())
   bookId     Int
   book       Book        @relation(fields: [bookId], references: [id])
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id])
   analysis   Analysis[]
   comments   Comments[]
 }
@@ -84,9 +86,9 @@ model Analysis {
   view_count   Int
   read_count   Int
   sectionId    Int
-  section      Section  @relation(fields: [sectionId], references: [id])
+  section      Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   bookId       Int
-  book         Book     @relation(fields: [bookId], references: [id])
+  book         Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
   
 }
 
@@ -95,9 +97,9 @@ model Comments {
   content         String
   publish_date    DateTime  @default(now())
   bookId          Int
-  book            Book      @relation(fields: [bookId], references: [id])
+  book            Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
   sectionId       Int
-  section         Section   @relation(fields: [sectionId], references: [id])
+  section         Section   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 }
 
 model Following {
@@ -137,9 +139,9 @@ model AudioBook {
   bookCover       String    
   publish_date    DateTime @default(now())
   bookId          Int?
-  book            Book?    @relation(fields: [bookId], references: [id])
+  book            Book?    @relation(fields: [bookId], references: [id], onDelete: Cascade)
   userId          Int
-  user            User     @relation(fields: [userId], references: [id])
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   hashtags        Hashtags[]
   category        Category[]
   libraryId       Int
@@ -165,7 +167,7 @@ model ReadingProgress {
   bookId    Int
   progress  Int     //BI BASLANGIC NOKTAMDAN ILERLEYEBILDIGIM NOKTAYA KADAR OLAN KISIM / TAMAMI
   user      User    @relation(fields: [userId], references: [id])
-  book      Book    @relation(fields: [bookId], references: [id])
+  book      Book    @relation(fields: [bookId], references: [id], onDelete: Cascade)
   @@unique([userId, bookId])
 }
 model PrivateNotes{
@@ -173,9 +175,9 @@ model PrivateNotes{
   content   String
   date      DateTime  @default(now())
   userId    Int
-  user      User      @relation(fields: [userId], references: [id])
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   bookId    Int
-  book      Book     @relation(fields: [bookId], references: [id])
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
 }
 
 model Library { //kullanicinin yazdigi/seslendirdigi tum kitaplar
@@ -183,7 +185,7 @@ model Library { //kullanicinin yazdigi/seslendirdigi tum kitaplar
   books         Book[]
   audioBooks    AudioBook[]
   userId        Int         @unique
-  user          User        @relation(fields: [userId], references: [id])
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model BookCase { //kullanicinin okudugu/dinledigi ve okumaya/dinlemeye devam ettigi kitaplar
@@ -191,12 +193,13 @@ model BookCase { //kullanicinin okudugu/dinledigi ve okumaya/dinlemeye devam ett
   books         Book[]
   audioBooks    AudioBook[]
   userId        Int         @unique
-  user          User        @relation(fields: [userId], references: [id])
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ReadingList {
   id        Int       @id @default(autoincrement())
   books         Book[]
   audioBooks    AudioBook[]
-  user          User[]
+  userId        Int         @unique
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

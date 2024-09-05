@@ -16,10 +16,13 @@ import { AnnouncementModule } from './announcement/anons.module';
 import { AnnouncementController } from './announcement/annons.controller';
 import { AnnouncementService } from './announcement/anons.service';
 import { PrivateNotesService } from './note/note.service';
+import { SectionModule } from './section/section.module';
+import { SectionController } from './section/section.controller';
+import { SectionService } from './section/section.service';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule],
-  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController],
-  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService],
+  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, SectionModule],
+  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, SectionController],
+  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, SectionService],
 })
 export class AppModule {}

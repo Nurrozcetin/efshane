@@ -19,10 +19,13 @@ import { PrivateNotesService } from './note/note.service';
 import { SectionModule } from './section/section.module';
 import { SectionController } from './section/section.controller';
 import { SectionService } from './section/section.service';
+import { CommentModule } from './comment/comment.module';
+import { CommentController } from './comment/comment.controller';
+import { CommentService } from './comment/comment.service';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, SectionModule],
-  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, SectionController],
-  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, SectionService],
+  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, SectionModule, CommentModule],
+  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, SectionController, CommentController],
+  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, SectionService, CommentService],
 })
 export class AppModule {}

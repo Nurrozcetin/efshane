@@ -13,7 +13,7 @@ model User {
   email             String    @unique
   username          String    @unique
   password          String
-  date_of_birth     DateTime  @default(now())
+  date_of_birth     DateTime  
   profile_image     String
   age               Int
   image_background  String
@@ -31,6 +31,7 @@ model User {
   library           Library?
   bookCase          BookCase?
   readingList       ReadingList?
+  comment           Comments?
 }
 
 model Announcement {
@@ -100,6 +101,8 @@ model Comments {
   book            Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
   sectionId       Int
   section         Section   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  userId          Int       @unique
+  user            User      @relation(fields: [userId], references: [id])
 }
 
 model Following {
@@ -197,7 +200,7 @@ model BookCase { //kullanicinin okudugu/dinledigi ve okumaya/dinlemeye devam ett
 }
 
 model ReadingList {
-  id        Int       @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   books         Book[]
   audioBooks    AudioBook[]
   userId        Int         @unique

@@ -1,4 +1,6 @@
-import { IsEmail, IsInt, IsNotEmpty, Matches } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsDate, IsEmail, IsInt, IsNotEmpty, Matches } from 'class-validator';
+
 export class CreateUserDto{
     id: string;
 
@@ -16,7 +18,12 @@ export class CreateUserDto{
 
     @IsInt()
     age: number;
+    
     profile_image: string;
     image_background: string;
     about?: string;
+
+    @IsDate()
+    @Transform(({ value }) => new Date(value)) 
+    date_of_birth?: Date;
 }

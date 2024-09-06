@@ -7,6 +7,29 @@ import { CreateCommentDto } from "./dto/create-comment.dto";
 export  class CommentController {
     constructor(private readonly  commentService: CommentService) {}
     @UseGuards(JwtAuthGuard)
+    @Post(':bookId')
+    async createCommentByBookId(
+        @Param('bookId') bookId: string,
+        @Body() body: CreateCommentDto,
+        @Req() req
+        ) {
+            const userId = req.user.id; 
+            return this.commentService.createCommentByBookId(bookId, body, userId);
+        }
+
+    @UseGuards(JwtAuthGuard)
+    @Post(':bookId/:sectionId')
+    async createCommentBySectionId(
+        @Param('bookId') bookId: string,
+        @Param('sectionId') sectionId: string,
+        @Body() body: CreateCommentDto,
+        @Req() req
+        ) {
+            const userId = req.user.id; 
+            return this.commentService.createCommentBySectionId(bookId, sectionId, body, userId);
+        }
+        
+    @UseGuards(JwtAuthGuard)
     @Get(':bookId')
     async getAllCommentsByBookId(
         @Param('bookId') bookId: number,

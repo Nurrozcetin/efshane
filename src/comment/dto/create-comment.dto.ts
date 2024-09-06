@@ -1,8 +1,5 @@
 import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
-
 export class CreateCommentDto {
-    id: string;
-
     @IsNotEmpty()
     @IsString()
     content: string;
@@ -14,6 +11,4 @@ export class CreateCommentDto {
     @IsOptional()
     @IsInt()
     sectionId: number;
-
-    userId: number;
 }

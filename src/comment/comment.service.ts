@@ -5,6 +5,55 @@ import { CreateCommentDto } from "./dto/create-comment.dto";
 @Injectable()
 export class CommentService{
     constructor(private readonly prisma:PrismaService) {}     
+    async createCommentByBookId(bookId: string, createCommentDto: CreateCommentDto, userId: number) {
+        const book = await this.prisma.book.findUnique({
+            where: { id: parseInt(bookId, 10) },
+        });
+    
+        if (!book) {
+            throw new NotFoundException('This book does not exist. Please enter the correct book id.');
+        }
+    
+        const comment = await this.prisma.comments.create({
+            data: {
+                content:  createCommentDto.content,
+                bookId: parseInt(bookId, 10),
+                sectionId: createCommentDto.sectionId || null,
+                userId: userId,
+            },
+        });
+        return { message: 'Comment created successfully.', comment: comment };
+    }       
+    
+    async createCommentBySectionId(bookId: string, sectionId: string, createCommentDto: CreateCommentDto, userId: number) {
+        const book = await this.prisma.book.findUnique({
+            where: { id: parseInt(bookId, 10) },
+        });
+    
+        if (!book) {
+            throw new NotFoundException('This book does not exist. Please enter the correct book id.');
+        }
+    
+        const section = await this.prisma.section.findUnique({
+            where: { id: parseInt(sectionId, 10) },
+        });
+    
+        if (!section) {
+            throw new NotFoundException('This section does not exist. Please enter the correct section id.');
+        }
+    
+        const comment = await this.prisma.comments.create({
+            data: {
+                content: createCommentDto.content,
+                bookId: parseInt(bookId, 10),
+                sectionId: parseInt(sectionId, 10),
+                userId: userId,
+            },
+        });
+    
+        return { message: 'Comment created successfully.', comment: comment };
+    }
+    
     async getAllCommentsByBookId(bookId: string){
         const comments = await this.prisma.comments.findMany({
             where:{

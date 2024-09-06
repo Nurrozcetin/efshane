@@ -31,7 +31,7 @@ model User {
   library           Library?
   bookCase          BookCase?
   readingList       ReadingList?
-  comment           Comments?
+  comment           Comments[]
 }
 
 model Announcement {
@@ -99,9 +99,9 @@ model Comments {
   publish_date    DateTime  @default(now())
   bookId          Int
   book            Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  sectionId       Int
-  section         Section   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  userId          Int       @unique
+  sectionId       Int?
+  section         Section?   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  userId          Int  
   user            User      @relation(fields: [userId], references: [id])
 }
 

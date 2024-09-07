@@ -68,7 +68,7 @@ model Book {
   readingList       ReadingList  @relation(fields: [readingListId], references: [id])
 }
 
-model Section {
+model Section { //chapter
   id         Int         @default(autoincrement()) @id
   title      String
   content    String

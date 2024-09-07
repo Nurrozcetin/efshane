@@ -22,10 +22,14 @@ import { SectionService } from './section/section.service';
 import { CommentModule } from './comment/comment.module';
 import { CommentController } from './comment/comment.controller';
 import { CommentService } from './comment/comment.service';
+import { MessageService } from './message/message.service';
+import { MessageController } from './message/message.controller';
+import { MessageModule } from './message/message.module';
+import { EncryptionService } from './message/encryption.service';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, SectionModule, CommentModule],
-  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, SectionController, CommentController],
-  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, SectionService, CommentService],
+  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, SectionModule, CommentModule, MessageModule],
+  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, SectionController, CommentController, MessageController],
+  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, SectionService, CommentService, MessageService, EncryptionService],
 })
 export class AppModule {}

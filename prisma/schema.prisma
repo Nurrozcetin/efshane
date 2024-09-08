@@ -32,6 +32,7 @@ model User {
   bookCase          BookCase?
   readingList       ReadingList?
   comment           Comments[]
+  notification      Notification[]
 }
 
 model Announcement {
@@ -55,7 +56,7 @@ model Book {
   publish           Boolean     @default(false)
   hashtag           Hashtags[]
   audioBook         AudioBook[]
-  category          Category[]
+  categories        BookCategory[]
   privateNote       PrivateNotes[]
   progress          ReadingProgress[]
   userId            Int
@@ -146,7 +147,7 @@ model AudioBook {
   userId          Int
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   hashtags        Hashtags[]
-  category        Category[]
+  category        AudioBookCategory[]
   libraryId       Int
   library         Library     @relation(fields: [libraryId], references: [id])
   bookCaseId      Int
@@ -156,12 +157,35 @@ model AudioBook {
 }
 
 model Category {
+  id                    Int       @default(autoincrement()) @id
+  name                  String    @unique
+  bookCategories        BookCategory[]
+  audioBookCategories   AudioBookCategory[]
+}
+
+model BookCategory {
+  bookId        Int
+  categoryId    Int
+  book          Book      @relation(fields: [bookId], references: [id])
+  category      Category  @relation(fields: [categoryId], references: [id])
+  @@id([bookId, categoryId])
+}
+
+model AudioBookCategory {
+  audioBookId        Int
+  categoryId    Int
+  audioBook     AudioBook      @relation(fields: [audioBookId], references: [id])
+  category      Category  @relation(fields: [categoryId], references: [id])
+  @@id([audioBookId, categoryId])
+}
+
+model Notification {
   id          Int       @default(autoincrement()) @id
-  name        String    @unique
-  bookId      Int?
-  book        Book?    @relation(fields: [bookId], references: [id])
-  audioBookId Int?
-  audioBook   AudioBook? @relation(fields: [audioBookId], references: [id])
+  message     String
+  userId      Int       
+  user        User      @relation(fields: [userId], references: [id])
+  isRead      Boolean   @default(false)  
+  createdAt   DateTime  @default(now())  
 }
 
 model ReadingProgress {

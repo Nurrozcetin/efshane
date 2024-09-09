@@ -29,10 +29,13 @@ import { EncryptionService } from './message/encryption.service';
 import { CategoryModule } from './category/category.module';
 import { CategoryController } from './category/category.controller';
 import { CategoryService } from './category/category.service';
+import { NotifyController } from './notification/notification.controller';
+import { NotifyService } from './notification/notification.service';
+import { NotifyModule } from './notification/notification.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, SectionModule, CommentModule, MessageModule, CategoryModule],
-  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, SectionController, CommentController, MessageController, CategoryController ],
-  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, SectionService, CommentService, MessageService, EncryptionService, CategoryService],
+  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, SectionModule, CommentModule, MessageModule, CategoryModule, NotifyModule],
+  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, SectionController, CommentController, MessageController, CategoryController, NotifyController],
+  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, SectionService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService],
 })
 export class AppModule {}

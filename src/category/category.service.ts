@@ -54,4 +54,17 @@ export class CategoryService {
             }
         });
     }
+
+    async updateCategoriesForBook(bookId: number,  categoryIds: number[]) {
+        const bookCategories = categoryIds.map((categoryId) => ({
+            bookId,
+            categoryId
+        }));
+
+        await this.prisma.bookCategory.createMany({
+            data: bookCategories,
+        });
+        
+        return { message: 'Categories updated for book successfully.' }; 
+    }
 }

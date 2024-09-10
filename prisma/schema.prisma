@@ -54,7 +54,7 @@ model Book {
   bookCover         String
   comments          Comments[]
   publish           Boolean     @default(false)
-  hashtag           Hashtags[]
+  hashtags          BookHashtags[]
   audioBook         AudioBook[]
   categories        BookCategory[]
   privateNote       PrivateNotes[]
@@ -126,15 +126,6 @@ model Messages {
   sender      User    @relation("Sender", fields: [senderId], references: [id])
 }
 
-model Hashtags {
-  id         Int       @default(autoincrement()) @id
-  name       String
-  bookId     Int?
-  book       Book?    @relation(fields: [bookId], references: [id])
-  audioBookId Int?
-  audioBook  AudioBook? @relation(fields: [audioBookId], references: [id])
-}
-
 model AudioBook {
   id              Int       @default(autoincrement()) @id
   title           String
@@ -146,7 +137,7 @@ model AudioBook {
   book            Book?    @relation(fields: [bookId], references: [id], onDelete: Cascade)
   userId          Int
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  hashtags        Hashtags[]
+  hashtags        AudioBookHashtags[]
   category        AudioBookCategory[]
   libraryId       Int
   library         Library     @relation(fields: [libraryId], references: [id])
@@ -154,6 +145,30 @@ model AudioBook {
   bookCase        BookCase    @relation(fields: [bookCaseId], references: [id])
   readingListId     Int
   readingList       ReadingList  @relation(fields: [readingListId], references: [id])
+}
+
+model Hashtags {
+  id                      Int       @default(autoincrement()) @id
+  name                    String
+  isDefault               Boolean     @default(false)
+  bookHashtags            BookHashtags[]
+  audioBookHashtags       AudioBookHashtags[]
+}
+
+model BookHashtags{
+  bookId        Int
+  hashtagsId    Int
+  book          Book      @relation(fields: [bookId], references: [id])
+  hashtag       Hashtags  @relation(fields: [hashtagsId], references: [id])
+  @@id([bookId, hashtagsId])
+}
+
+model AudioBookHashtags{
+  audioBookId             Int
+  hashtagsId         Int
+  audioBook          AudioBook      @relation(fields: [audioBookId], references: [id])
+  hashtag            Hashtags       @relation(fields: [hashtagsId], references: [id])
+  @@id([audioBookId, hashtagsId])
 }
 
 model Category {

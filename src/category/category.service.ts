@@ -31,6 +31,23 @@ export class CategoryService {
         });
     }
 
+    async updateCategoriesForBook(bookId: number, categoryIds: number[]) {
+        await this.prisma.bookCategory.deleteMany({
+            where: { bookId },
+        });
+
+        const bookCategories = categoryIds.map((categoryId) => ({
+            bookId,
+            categoryId
+        }));
+
+        await this.prisma.bookCategory.createMany({
+            data: bookCategories,
+        });
+        
+        return { message: 'Categories updated for book successfully.' }; 
+    }
+
     async assignCategoriesToAudioBook(audioBookId: number, categoryIds: number[]){
         const audioBookCategories = categoryIds.map((categoryId) => ({
             audioBookId,
@@ -55,16 +72,20 @@ export class CategoryService {
         });
     }
 
-    async updateCategoriesForBook(bookId: number,  categoryIds: number[]) {
-        const bookCategories = categoryIds.map((categoryId) => ({
-            bookId,
+    async updateCategoriesForAudioBook(audioBookId: number, categoryIds: number[]) {
+        await this.prisma.audioBookCategory.deleteMany({
+            where: { audioBookId },
+        });
+
+        const audioBookCategories = categoryIds.map((categoryId) => ({
+            audioBookId,
             categoryId
         }));
 
-        await this.prisma.bookCategory.createMany({
-            data: bookCategories,
+        await this.prisma.audioBookCategory.createMany({
+            data: audioBookCategories,
         });
         
-        return { message: 'Categories updated for book successfully.' }; 
+        return { message: 'Categories updated for audio book successfully.' }; 
     }
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Put, UseGuards } from "@nestjs/common";
 import { CategoryService } from "./category.service";
 import { CreateBookCategoryDto } from "./dto/assign-book-category.dto";
 import { JwtAuthGuard } from "src/auth/guards/jwt.guards";
@@ -21,6 +21,15 @@ export class CategoryController{
         return await this.categoryService.getCategoriesByBook(bookID);
     }
 
+    @Patch('book/:bookId')
+    async updateCategoriesForBook(
+        @Param('bookId') bookId: string,
+        @Body() createBookCategoryDto: CreateBookCategoryDto,
+    ) {
+        const bookID = parseInt(bookId, 10); 
+        return await this.categoryService.updateCategoriesForBook(bookID, createBookCategoryDto.categoryIds);
+    }
+
     @UseGuards(JwtAuthGuard)
     @Post('assignAudioBook')
     async assignCategoriesToAudioBook(@Body() createBookCategoryDto: CreateBookCategoryDto) {
@@ -35,12 +44,12 @@ export class CategoryController{
         return await this.categoryService.getCategoriesByAudioBook(audioBookID);
     }
 
-    @Put('book/:bookId')
-    async updateCategoriesForBook(
-        @Param('bookId') bookId: string,
+    @Patch('audioBook/:audioBookId')
+    async updateCategoriesForAudioBook(
+        @Param('audioBookId') audioBookId: string,
         @Body() createBookCategoryDto: CreateBookCategoryDto,
     ) {
-        const bookID = parseInt(bookId, 10); 
-        return await this.categoryService.updateCategoriesForBook(bookID, createBookCategoryDto.categoryIds);
+        const audioBookID = parseInt(audioBookId, 10); 
+        return await this.categoryService.updateCategoriesForAudioBook(audioBookID, createBookCategoryDto.categoryIds);
     }
 }

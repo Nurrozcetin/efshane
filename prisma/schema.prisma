@@ -148,8 +148,8 @@ model AudioBook {
 }
 
 model Hashtags {
-  id                      Int       @default(autoincrement()) @id
-  name                    String
+  id                      Int         @default(autoincrement()) @id
+  name                    String      @unique 
   isDefault               Boolean     @default(false)
   bookHashtags            BookHashtags[]
   audioBookHashtags       AudioBookHashtags[]
@@ -164,7 +164,7 @@ model BookHashtags{
 }
 
 model AudioBookHashtags{
-  audioBookId             Int
+  audioBookId        Int
   hashtagsId         Int
   audioBook          AudioBook      @relation(fields: [audioBookId], references: [id])
   hashtag            Hashtags       @relation(fields: [hashtagsId], references: [id])

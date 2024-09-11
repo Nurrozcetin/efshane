@@ -1,3 +1,4 @@
+import { LibraryModule } from './library/library.module';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -34,10 +35,12 @@ import { NotifyService } from './notification/notification.service';
 import { NotifyModule } from './notification/notification.module';
 import { HashtagService } from './hashtag/hashtag.service';
 import { HashtagController } from './hashtag/hashtag.controller';
+import { LibraryService } from './library/library.service';
+import { LibraryController } from './library/library.controller';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, SectionModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule],
-  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, SectionController, CommentController, MessageController, CategoryController, NotifyController, HashtagController],
-  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, SectionService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService],
+  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, SectionModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, LibraryModule],
+  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, SectionController, CommentController, MessageController, CategoryController, NotifyController, HashtagController, LibraryController],
+  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, SectionService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService, LibraryService],
 })
 export class AppModule {}

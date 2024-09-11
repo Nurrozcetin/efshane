@@ -12,7 +12,7 @@ export class HashtagController {
         return this.hashtagService.getSuggestedHashtags();
     }
 
-    //@UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard)
     @Post('book/:bookId')
     async assignOrCreateHashtagsToBook(
         @Param('bookId') bookId: string,
@@ -76,6 +76,7 @@ export class HashtagController {
         return this.hashtagService.updateHashtagsForAudioBook(audioBookID, createHashtagDto.hashtagIds);
     }
 
+    @UseGuards(JwtAuthGuard)
     @Delete('audiobook/:audiobookId/:hashtagId')
     async removeHashtagFromAudioBook(
         @Param('audiobookId') audiobookId: string,

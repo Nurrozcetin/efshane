@@ -60,7 +60,7 @@ model Book {
   progress          ReadingProgress[]
   userId            Int
   user              User            @relation(fields: [userId], references: [id])
-  library           Library[]       
+  library           Library[]       @relation("LibraryBooks")
   bookCase          BookCase[]      @relation("BookCaseBooks")
   readingList       ReadingList[]   @relation("ReadingListBooks")
 }
@@ -134,7 +134,7 @@ model AudioBook {
   user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   hashtags        AudioBookHashtags[]
   category        AudioBookCategory[]
-  library         Library[]       
+  library         Library[]       @relation("LibraryAudioBooks")
   bookcase        BookCase[]      @relation("BookCaseAudioBooks") 
   readingList     ReadingList[]   @relation("ReadingListAudioBooks") 
 }
@@ -218,13 +218,13 @@ model Library {
   id            Int          @id @default(autoincrement())
   userId        Int          @unique
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  books         Book[]        
-  audioBooks    AudioBook[]    
+  books         Book[]       @relation("LibraryBooks") 
+  audioBooks    AudioBook[]  @relation("LibraryAudioBooks")
 }
 
 model BookCase { //kullanicinin okudugu/dinledigi ve okumaya/dinlemeye devam ettigi kitaplar
   id            Int          @id @default(autoincrement())
-  userId        Int
+  userId        Int          @unique
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   books         Book[]       @relation("BookCaseBooks")   
   audioBooks    AudioBook[]  @relation("BookCaseAudioBooks")
@@ -232,7 +232,7 @@ model BookCase { //kullanicinin okudugu/dinledigi ve okumaya/dinlemeye devam ett
 
 model ReadingList {
   id            Int          @id @default(autoincrement())
-  userId        Int
+  userId        Int          @unique
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   books         Book[]       @relation("ReadingListBooks")   
   audioBooks    AudioBook[]  @relation("ReadingListAudioBooks")

@@ -37,10 +37,13 @@ import { HashtagService } from './hashtag/hashtag.service';
 import { HashtagController } from './hashtag/hashtag.controller';
 import { LibraryService } from './library/library.service';
 import { LibraryController } from './library/library.controller';
+import { ReadingListController } from './reading-list/readingList.controller';
+import { ReadingListService } from './reading-list/readingList.service';
+import { ReadingListModule } from './reading-list/readingList.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, SectionModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, LibraryModule],
-  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, SectionController, CommentController, MessageController, CategoryController, NotifyController, HashtagController, LibraryController],
-  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, SectionService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService, LibraryService],
+  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, SectionModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, LibraryModule, ReadingListModule],
+  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, SectionController, CommentController, MessageController, CategoryController, NotifyController, HashtagController, LibraryController, ReadingListController],
+  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, SectionService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService, LibraryService, ReadingListService],
 })
 export class AppModule {}

@@ -16,7 +16,7 @@ export class NotesController{
     @Body() body: CreatePrivateNoteDto,
     @Req() req) 
     {
-        const userId = req.user.id; // JWT'den gelen kullanıcı ID'sini al
+        const userId = req.user.id; 
         return this.notesService.createPrivateNote(body, userId);
     }
 

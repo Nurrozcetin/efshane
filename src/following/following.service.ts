@@ -1,7 +1,5 @@
-import { FollowingController } from './following.controller';
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "prisma/prisma.service";
-import { AddFollowingDto } from "./dto/add-following.dto";
 
 @Injectable()
 export class FollowingService{

@@ -1,20 +1,18 @@
-import { Optional } from "@nestjs/common";
-import { IsBoolean, IsInt, IsNotEmpty, IsString } from "class-validator";
+import { IsBoolean, IsOptional, IsString } from "class-validator";
 
 export class UpdateBookDto {
     id: string;
 
-    @Optional()
+    @IsOptional()
     @IsString()
     title: string;
 
-    @Optional()
+    @IsOptional()
     bookCover: string;
 
-    @Optional()
     publish_date: Date = new Date();
 
-    @Optional()
+    @IsOptional()
     @IsBoolean()
     publish: boolean
 }

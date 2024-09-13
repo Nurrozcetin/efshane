@@ -32,6 +32,7 @@ model User {
   readingList       ReadingList[]
   comment           Comments[]
   notification      Notification[]
+  episodes          Episodes[]
 }
 
 model Announcement {
@@ -45,14 +46,14 @@ model Announcement {
 }
 
 model Book {
-  id                Int         @default(autoincrement()) @id
+  id                Int             @default(autoincrement()) @id
   title             String
   section           Section[]
   analysis          Analysis[]
-  publish_date      DateTime    @default(now())
+  publish_date      DateTime        @default(now())
   bookCover         String
   comments          Comments[]
-  publish           Boolean     @default(false)
+  publish           Boolean         @default(false)
   hashtags          BookHashtags[]
   audioBook         AudioBook[]
   categories        BookCategory[]
@@ -66,16 +67,16 @@ model Book {
 }
 
 model Section { //chapter
-  id         Int         @default(autoincrement()) @id
-  title      String
-  content    String
-  date       DateTime    @default(now())
-  bookId     Int
-  book       Book        @relation(fields: [bookId], references: [id])
-  userId    Int
-  user      User      @relation(fields: [userId], references: [id])
-  analysis   Analysis[]
-  comments   Comments[]
+  id          Int         @default(autoincrement()) @id
+  title       String
+  content     String
+  date        DateTime    @default(now())
+  bookId      Int
+  book        Book        @relation(fields: [bookId], references: [id])
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
+  analysis    Analysis[]
+  comments    Comments[]
 }
 
 model Analysis {
@@ -144,7 +145,10 @@ model Episodes {
   title           String
   duration        Int
   publish_date    DateTime        @default(now())
+  publish         Boolean         @default(false)
   audioFile       String
+  userId          Int
+  user            User            @relation(fields: [userId], references: [id])
   audiobookId     Int?
   audiobook       AudioBook?      @relation(fields: [audiobookId], references: [id], onDelete: Cascade)
 }

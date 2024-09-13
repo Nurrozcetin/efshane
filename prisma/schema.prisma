@@ -76,7 +76,6 @@ model Section { //chapter
   user      User      @relation(fields: [userId], references: [id])
   analysis   Analysis[]
   comments   Comments[]
-  episodes  Episodes[]
 }
 
 model Analysis {
@@ -148,8 +147,6 @@ model Episodes {
   audioFile       String
   audiobookId     Int?
   audiobook       AudioBook?      @relation(fields: [audiobookId], references: [id], onDelete: Cascade)
-  sectionId       Int?     
-  section         Section?         @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 }
 
 model Hashtags {

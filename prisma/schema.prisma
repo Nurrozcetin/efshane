@@ -139,7 +139,7 @@ model AudioBook {
   publish_date    DateTime        @default(now())
   bookId          Int?
   book            Book?           @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  userId          Int             @unique
+  userId          Int             
   user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   hashtags        AudioBookHashtags[]
   category        AudioBookCategory[]

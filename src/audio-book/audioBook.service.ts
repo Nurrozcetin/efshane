@@ -1,60 +1,86 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "prisma/prisma.service";
 import { CreateAudioBookDto } from "./dto/create-audioBook.dto";
 
 @Injectable()
-export class AudioBookService {
-    constructor(private prisma: PrismaService) {}
-    /*async createAudioBook(createAudioBookDto: CreateAudioBookDto, userId) {
-        const { bookId, episodes, duration } = createAudioBookDto;
-    
-        let sections;
-        if (bookId) {
-            sections = await this.prisma.section.findMany({
-                where: { bookId },
-            });
-    
-            if (!sections.length) {
-                throw new NotFoundException('No sections found for the given book');
-            }
-        }
-    
-        const audiobook = await this.prisma.audioBook.create({
+export class AudioBookService{
+    constructor(private readonly prisma: PrismaService) {}
+    async createAudioBook(
+        audioBookDto: CreateAudioBookDto,
+        userId: number,
+    ) {
+        const { title, bookCover, duration, bookId} = audioBookDto;
+
+        const audioBook = await this.prisma.audioBook.create({
             data: {
-                title: sections ? sections[0].title : createAudioBookDto.title,
-                bookCover: sections ? sections[0].book.bookCover : createAudioBookDto.bookCover,
-                duration,
-                bookId,
+                title,
+                bookCover,
                 userId,
-                publish_date: createAudioBookDto.publish_date || new Date(),
+                bookId: bookId || null,
+                duration,
+                publish_date: new Date(),
             },
         });
-    
-        if (sections) {
-            for (const section of sections) {
-                await this.prisma.episodes.create({
-                    data: {
-                        title: section.title,
-                        duration: parseInt(createAudioBookDto.duration),
-                        sectionId: section.id,
-                        audiobookId: audiobook.id,
-                        audioFile: 'path/to/audiofile',
-                },
-            });
-        }
-        } else {
-            for (const episode of episodes) {
-                await this.prisma.episodes.create({
-                    data: {
-                        title: episode.title,
-                        duration: episode.duration,
-                        audiobookId: audiobook.id,
-                        audioFile: episode.audioFile,
-                    },
-                });
+        return audioBook;
+    } 
+
+    async getAllAudioBook(authorId: string) {
+        const audioBooks = await this.prisma.audioBook.findMany({
+            where: {
+                userId: parseInt(authorId, 10), 
+            },
+            include: {
+                episodes: true,
             }
+        });
+    
+        if (!audioBooks || audioBooks.length === 0) {
+            throw new NotFoundException(`No audio books found for authorId ${authorId}`);
+        }
+        return audioBooks;
+    }
+
+    async deleteAudioBook(audioBookId: string, userId: number) {
+        const audioBook = await this.prisma.audioBook.findUnique({
+            where: { id: parseInt(audioBookId, 10) },
+        });
+    
+        if (!audioBook) {
+            throw new NotFoundException('This audio book does not exist. Please enter the correct audio book id.');
         }
     
-        return audiobook;
-    }*/
+        if (audioBook.userId !== userId) {
+            throw new ForbiddenException('You are not the author of this audio book. You cannot delete episodes.');
+        }
+    
+        const audioBooks = await this.prisma.audioBook.deleteMany({
+            where: {
+                id: parseInt(audioBookId, 10),
+            },
+        });
+        return audioBooks;
+    }
+
+    async updateAudioBook(audioBookId: string, updateData: any, userId: number){
+        const audioBook = await this.prisma.audioBook.findUnique({
+            where: { id: parseInt(audioBookId, 10) },
+        });
+    
+        if (!audioBook) {
+            throw new NotFoundException('This audio book does not exist. Please enter the correct audio book id.');
+        }
+    
+        if (audioBook.userId !== userId) {
+            throw new ForbiddenException('You are not the author of this audio book. You cannot update audio book.');
+        }
+
+        const audioBooks = await this.prisma.audioBook.updateMany({
+            where: {
+                id: parseInt(audioBookId, 10),
+            },
+            data: updateData,
+        });
+        return audioBooks;
+    }
+    
 }

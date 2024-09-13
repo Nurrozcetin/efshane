@@ -26,7 +26,7 @@ export class BookService{
     async getAllBook(authorId: string) {
         const books = await this.prisma.book.findMany({
             where: {
-                userId: parseInt(authorId, 10), // Converting string to integer
+                userId: parseInt(authorId, 10), 
             },
             include: {
                 chapter: true,
@@ -49,7 +49,7 @@ export class BookService{
         }
     
         if (book.userId !== userId) {
-            throw new ForbiddenException('You are not the author of this book. You cannot delete sections.');
+            throw new ForbiddenException('You are not the author of this book. You cannot delete chapters.');
         }
     
         const books = await this.prisma.book.deleteMany({

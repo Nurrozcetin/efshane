@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsInt, IsNotEmpty, IsString } from "class-validator";
 
 export class CreateAudioBookDto {
     id: string;
@@ -9,19 +9,15 @@ export class CreateAudioBookDto {
 
     @IsNotEmpty()
     @IsString()
-    bookCover: string;
-
-    @IsNotEmpty()
-    @IsString()
     duration: string;
 
     @IsNotEmpty()
     @IsString()
-    episodes: string;
+    bookCover: string;
 
-    @IsOptional()
-    publish_date: Date = new Date();
-
+    @IsNotEmpty()
     @IsInt()
     bookId: number;
+
+    publish_date: Date = new Date();
 }

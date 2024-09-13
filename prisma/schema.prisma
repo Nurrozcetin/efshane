@@ -76,6 +76,7 @@ model Section { //chapter
   user      User      @relation(fields: [userId], references: [id])
   analysis   Analysis[]
   comments   Comments[]
+  episodes  Episodes[]
 }
 
 model Analysis {
@@ -124,19 +125,31 @@ model Messages {
 model AudioBook {
   id              Int              @default(autoincrement()) @id
   title           String
-  episodes        String
+  episodes        Episodes[]
   duration        String
   bookCover       String    
   publish_date    DateTime        @default(now())
   bookId          Int?
   book            Book?           @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  userId          Int
+  userId          Int             @unique
   user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   hashtags        AudioBookHashtags[]
   category        AudioBookCategory[]
   library         Library[]       @relation("LibraryAudioBooks")
   bookcase        BookCase[]      @relation("BookCaseAudioBooks") 
-  readingList     ReadingList[]   @relation("ReadingListAudioBooks") 
+  readingList     ReadingList[]   @relation("ReadingListAudioBooks")
+}
+
+model Episodes {
+  id              Int             @default(autoincrement()) @id
+  title           String
+  duration        Int
+  publish_date    DateTime        @default(now())
+  audioFile       String
+  audiobookId     Int?
+  audiobook       AudioBook?      @relation(fields: [audiobookId], references: [id], onDelete: Cascade)
+  sectionId       Int?     
+  section         Section?         @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 }
 
 model Hashtags {

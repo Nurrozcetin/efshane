@@ -1,3 +1,4 @@
+import { BookService } from './book/book.service';
 import { LibraryModule } from './library/library.module';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
@@ -46,10 +47,13 @@ import { BookCaseController } from './book-case/bookCase.controller';
 import { FollowingModule } from './following/following.module';
 import { FollowingService } from './following/following.service';
 import { FollowingController } from './following/following.controller';
+import { AudioBookModule } from './audio-book/audioBook..module';
+import { BookController } from './book/book.controller';
+import { BookModule } from './book/book.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, SectionModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, LibraryModule, ReadingListModule, BookCaseModule, FollowingModule],
-  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, SectionController, CommentController, MessageController, CategoryController, NotifyController, HashtagController, LibraryController, ReadingListController, BookCaseController, FollowingController],
-  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, SectionService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService, LibraryService, ReadingListService, BookCaseService, FollowingService],
+  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, SectionModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, LibraryModule, ReadingListModule, BookCaseModule, FollowingModule, BookModule],
+  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, SectionController, CommentController, MessageController, CategoryController, NotifyController, HashtagController, LibraryController, ReadingListController, BookCaseController, FollowingController, BookController],
+  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, SectionService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService, LibraryService, ReadingListService, BookCaseService, FollowingService, BookService],
 })
 export class AppModule {}

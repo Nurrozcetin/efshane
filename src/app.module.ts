@@ -18,9 +18,9 @@ import { AnnouncementModule } from './announcement/anons.module';
 import { AnnouncementController } from './announcement/annons.controller';
 import { AnnouncementService } from './announcement/anons.service';
 import { PrivateNotesService } from './note/note.service';
-import { SectionModule } from './section/section.module';
-import { SectionController } from './section/section.controller';
-import { SectionService } from './section/section.service';
+import { ChapterModule } from './section/chapter.module';
+import { ChapterController } from './section/chapter.controller';
+import { ChapterService } from './section/chapter.service';
 import { CommentModule } from './comment/comment.module';
 import { CommentController } from './comment/comment.controller';
 import { CommentService } from './comment/comment.service';
@@ -47,7 +47,6 @@ import { BookCaseController } from './book-case/bookCase.controller';
 import { FollowingModule } from './following/following.module';
 import { FollowingService } from './following/following.service';
 import { FollowingController } from './following/following.controller';
-import { AudioBookModule } from './audio-book/audioBook..module';
 import { BookController } from './book/book.controller';
 import { BookModule } from './book/book.module';
 import { EpisodeModule } from './episode/episode.module';
@@ -55,8 +54,8 @@ import { EpisodeService } from './episode/episode.service';
 import { EpisodeController } from './episode/episode.controller';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, SectionModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, LibraryModule, ReadingListModule, BookCaseModule, FollowingModule, BookModule, EpisodeModule],
-  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, SectionController, CommentController, MessageController, CategoryController, NotifyController, HashtagController, LibraryController, ReadingListController, BookCaseController, FollowingController, BookController, EpisodeController],
-  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, SectionService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService, LibraryService, ReadingListService, BookCaseService, FollowingService, BookService, EpisodeService],
+  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, ChapterModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, LibraryModule, ReadingListModule, BookCaseModule, FollowingModule, BookModule, EpisodeModule],
+  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, ChapterController, CommentController, MessageController, CategoryController, NotifyController, HashtagController, LibraryController, ReadingListController, BookCaseController, FollowingController, BookController, EpisodeController],
+  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, ChapterService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService, LibraryService, ReadingListService, BookCaseService, FollowingService, BookService, EpisodeService],
 })
 export class AppModule {}

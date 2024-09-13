@@ -29,7 +29,7 @@ export class BookService{
                 userId: parseInt(authorId, 10), // Converting string to integer
             },
             include: {
-                section: true,
+                chapter: true,
             }
         });
     

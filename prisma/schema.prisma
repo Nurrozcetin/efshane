@@ -26,7 +26,7 @@ model User {
   sender            Messages[]  @relation("Sender")
   progress          ReadingProgress[]
   privateNotes      PrivateNotes[]
-  section           Section[]
+  chapter           Chapter[]
   library           Library[]
   bookCase          BookCase[]
   readingList       ReadingList[]
@@ -48,7 +48,7 @@ model Announcement {
 model Book {
   id                Int             @default(autoincrement()) @id
   title             String
-  section           Section[]
+  chapter           Chapter[]
   analysis          Analysis[]
   publish_date      DateTime        @default(now())
   bookCover         String
@@ -66,7 +66,7 @@ model Book {
   readingList       ReadingList[]   @relation("ReadingListBooks")
 }
 
-model Section { //chapter
+model Chapter { 
   id          Int         @default(autoincrement()) @id
   title       String
   content     String
@@ -74,32 +74,40 @@ model Section { //chapter
   bookId      Int
   book        Book        @relation(fields: [bookId], references: [id])
   userId      Int
-  user        User      @relation(fields: [userId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
   analysis    Analysis[]
   comments    Comments[]
 }
 
 model Analysis {
-  id           Int       @default(autoincrement()) @id
-  like_count   Int
-  view_count   Int
-  read_count   Int
-  sectionId    Int
-  section      Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  bookId       Int
-  book         Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  id                Int       @default(autoincrement()) @id
+  like_count        Int
+  view_count        Int
+  read_count        Int
+  chapterId         Int
+  chapter           Chapter?  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  bookId            Int
+  book              Book?     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  audioBookId       Int
+  audioBook         AudioBook?     @relation(fields: [audioBookId], references: [id], onDelete: Cascade)
+  episodeId         Int
+  episode           Episodes?     @relation(fields: [episodeId], references: [id], onDelete:Cascade)
 }
 
 model Comments {
-  id              Int       @default(autoincrement()) @id
-  content         String
-  publish_date    DateTime  @default(now())
-  bookId          Int
-  book            Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  sectionId       Int?
-  section         Section?   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  userId          Int  
-  user            User      @relation(fields: [userId], references: [id])
+  id                Int         @default(autoincrement()) @id
+  content           String
+  publish_date      DateTime    @default(now())
+  chapterId         Int?        
+  chapter           Chapter?    @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  bookId            Int?        
+  book              Book?       @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  audioBookId       Int?        
+  audioBook         AudioBook?  @relation(fields: [audioBookId], references: [id], onDelete: Cascade)
+  episodeId         Int?        
+  episode           Episodes?   @relation(fields: [episodeId], references: [id], onDelete:Cascade)
+  userId            Int         
+  user              User        @relation(fields: [userId], references: [id])
 }
 
 model Following {
@@ -138,6 +146,8 @@ model AudioBook {
   library         Library[]       @relation("LibraryAudioBooks")
   bookcase        BookCase[]      @relation("BookCaseAudioBooks") 
   readingList     ReadingList[]   @relation("ReadingListAudioBooks")
+  analysis        Analysis[]
+  comments        Comments[]
 }
 
 model Episodes {
@@ -151,6 +161,8 @@ model Episodes {
   user            User            @relation(fields: [userId], references: [id])
   audiobookId     Int?
   audiobook       AudioBook?      @relation(fields: [audiobookId], references: [id], onDelete: Cascade)
+  analysis        Analysis[]
+  comments        Comments[]
 }
 
 model Hashtags {

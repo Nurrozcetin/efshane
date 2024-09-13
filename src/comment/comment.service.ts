@@ -16,16 +16,42 @@ export class CommentService{
     
         const comment = await this.prisma.comments.create({
             data: {
-                content:  createCommentDto.content,
+                content: createCommentDto.content,
                 bookId: parseInt(bookId, 10),
-                sectionId: createCommentDto.sectionId || null,
+                chapterId: null,
+                audioBookId: null,
+                episodeId: null,
+                userId,  
+                publish_date: new Date(),
+            },
+        });        
+        return { message: 'Comment created successfully.', comment: comment };
+    } 
+    
+    async createCommentByAudioBookId(audioBookId: string, createCommentDto: CreateCommentDto, userId: number) {
+        const audioBook = await this.prisma.audioBook.findUnique({
+            where: { id: parseInt(audioBookId, 10) },
+        });
+    
+        if (!audioBook) {
+            throw new NotFoundException('This audio book does not exist. Please enter the correct audio book id.');
+        }
+    
+        const comment = await this.prisma.comments.create({
+            data: {
+                content: createCommentDto.content,
+                bookId: null,
+                chapterId: null,
+                audioBookId: parseInt(audioBookId, 10),
+                episodeId: null,
                 userId: userId,
+                publish_date: new Date(),
             },
         });
         return { message: 'Comment created successfully.', comment: comment };
-    }       
+    } 
     
-    async createCommentBySectionId(bookId: string, sectionId: string, createCommentDto: CreateCommentDto, userId: number) {
+    async createCommentByChapterId(bookId: string, chapterId: string, createCommentDto: CreateCommentDto, userId: number) {
         const book = await this.prisma.book.findUnique({
             where: { id: parseInt(bookId, 10) },
         });
@@ -34,20 +60,55 @@ export class CommentService{
             throw new NotFoundException('This book does not exist. Please enter the correct book id.');
         }
     
-        const section = await this.prisma.section.findUnique({
-            where: { id: parseInt(sectionId, 10) },
+        const chapter = await this.prisma.chapter.findUnique({
+            where: { id: parseInt(chapterId, 10) },
         });
     
-        if (!section) {
-            throw new NotFoundException('This section does not exist. Please enter the correct section id.');
+        if (!chapter) {
+            throw new NotFoundException('This chapter does not exist. Please enter the correct chapter id.');
         }
     
         const comment = await this.prisma.comments.create({
             data: {
                 content: createCommentDto.content,
                 bookId: parseInt(bookId, 10),
-                sectionId: parseInt(sectionId, 10),
+                chapterId: parseInt(chapterId, 10),
+                audioBookId: null,
+                episodeId: null,
                 userId: userId,
+                publish_date: new Date(),
+            },
+        });
+    
+        return { message: 'Comment created successfully.', comment: comment };
+    }
+
+    async createCommentByEpisodeId(audioBookId: string, episodeId: string, createCommentDto: CreateCommentDto, userId: number) {
+        const audioBook = await this.prisma.audioBook.findUnique({
+            where: { id: parseInt(audioBookId, 10) },
+        });
+    
+        if (!audioBook) {
+            throw new NotFoundException('This audio  book does not exist. Please enter the correct audio book id.');
+        }
+    
+        const chapter = await this.prisma.episodes.findUnique({
+            where: { id: parseInt(episodeId, 10) },
+        });
+    
+        if (!chapter) {
+            throw new NotFoundException('This chapter does not exist. Please enter the correct chapter id.');
+        }
+    
+        const comment = await this.prisma.comments.create({
+            data: {
+                content: createCommentDto.content,
+                bookId: null,
+                chapterId: null,
+                audioBookId: parseInt(audioBookId, 10),
+                episodeId: parseInt(episodeId, 10),
+                userId: userId,
+                publish_date: new Date(),
             },
         });
     
@@ -67,16 +128,43 @@ export class CommentService{
         return comments;
     }
 
-    async getAllCommentsBySectionsId(bookId: string, sectionId: string){
+    async getAllCommentsByAudioBookId(audioBookId: string){
         const comments = await this.prisma.comments.findMany({
             where:{
-                bookId: parseInt(bookId, 10),
-                sectionId: parseInt(sectionId, 10)
+                audioBookId: parseInt(audioBookId, 10),
             },
         });
 
         if (!comments || (comments).length === 0) {
-            throw new NotFoundException(`No comments found for book id ${bookId}, section id ${sectionId}`);
+            throw new NotFoundException(`No comments found for audioBookId ${audioBookId}`);
+        }
+        return comments;
+    }
+
+    async getAllCommentsByChaptersId(bookId: string, chapterId: string){
+        const comments = await this.prisma.comments.findMany({
+            where:{
+                bookId: parseInt(bookId, 10),
+                chapterId: parseInt(chapterId, 10)
+            },
+        });
+
+        if (!comments || (comments).length === 0) {
+            throw new NotFoundException(`No comments found for book id ${bookId}, chapter id ${chapterId}`);
+        }
+        return comments;
+    }
+
+    async getAllCommentsByEpisodesId(audioBookId: string, episodesId: string){
+        const comments = await this.prisma.comments.findMany({
+            where:{
+                audioBookId: parseInt(audioBookId, 10),
+                episodeId: parseInt(episodesId, 10)
+            },
+        });
+
+        if (!comments || (comments).length === 0) {
+            throw new NotFoundException(`No comments found for audio book id ${audioBookId}, episodes id ${episodesId}`);
         }
         return comments;
     }
@@ -110,7 +198,36 @@ export class CommentService{
         return { message: 'Comment deleted successfully.' };
     }
 
-    async deleteCommentsBySectionId(bookId: string, sectionId: string, commentId: string, userId: number) {
+    async deleteCommentsByAudioBookId(audioBookId: string, commentId: string, userId: number) {
+        const audioBook = await this.prisma.audioBook.findUnique({
+            where: { id: parseInt(audioBookId, 10) },
+        });
+    
+        if (!audioBook) {
+            throw new NotFoundException('This audio  book does not exist. Please enter the correct audio book id.');
+        }
+    
+        const comment = await this.prisma.comments.findUnique({
+            where: { id: parseInt(commentId, 10) },
+        });
+    
+        if (!comment) {
+            throw new NotFoundException('This comment does not exist. Please enter the correct comment id.');
+        }
+    
+        if (comment.userId !== userId) {
+            throw new ForbiddenException('You are not the author of this comment. You cannot delete this comment.');
+        }
+    
+        await this.prisma.comments.delete({
+            where: {
+                id: parseInt(commentId, 10),
+            },
+        });
+        return { message: 'Comment deleted successfully.' };
+    }
+
+    async deleteCommentsByChapterId(bookId: string, chapterId: string, commentId: string, userId: number) {
         const book = await this.prisma.book.findUnique({
             where: { id: parseInt(bookId, 10) },
         });
@@ -119,12 +236,49 @@ export class CommentService{
             throw new NotFoundException('This book does not exist. Please enter the correct book id.');
         }
 
-        const section = await this.prisma.section.findUnique({
-            where: { id: parseInt(sectionId, 10) },
+        const chapter = await this.prisma.chapter.findUnique({
+            where: { id: parseInt(chapterId, 10) },
         });
     
-        if (!section) {
-            throw new NotFoundException('This section does not exist. Please enter the correct section id.');
+        if (!chapter) {
+            throw new NotFoundException('This chapter does not exist. Please enter the correct chapter id.');
+        }
+    
+        const comment = await this.prisma.comments.findUnique({
+            where: { id: parseInt(commentId, 10) },
+        });
+    
+        if (!comment) {
+            throw new NotFoundException('This comment does not exist. Please enter the correct comment id.');
+        }
+    
+        if (comment.userId !== userId) {
+            throw new ForbiddenException('You are not the author of this comment. You cannot delete this comment.');
+        }
+    
+        await this.prisma.comments.delete({
+            where: {
+                id: parseInt(commentId, 10),
+            },
+        });
+        return { message: 'Comment deleted successfully.' };
+    }
+
+    async deleteCommentsByEpisodesId(audioBookId: string, episodesId: string, commentId: string, userId: number) {
+        const audioBook = await this.prisma.audioBook.findUnique({
+            where: { id: parseInt(audioBookId, 10) },
+        });
+    
+        if (!audioBook) {
+            throw new NotFoundException('This audio  book does not exist. Please enter the correct audio book id.');
+        }
+
+        const episode = await this.prisma.episodes.findUnique({
+            where: { id: parseInt(episodesId, 10) },
+        });
+    
+        if (!episode) {
+            throw new NotFoundException('This episode does not exist. Please enter the correct episode id.');
         }
     
         const comment = await this.prisma.comments.findUnique({
@@ -177,7 +331,37 @@ export class CommentService{
         return { message: 'Comment updated successfully.' };
     }
 
-    async updateCommentsBySectionId(bookId: string, sectionId: string, commentId: string, updateData: any, userId: number) {
+    async updateCommentsByAudioBookId(audioBookId: string, commentId: string, updateData: any, userId: number) {
+        const audioBook = await this.prisma.audioBook.findUnique({
+            where: { id: parseInt(audioBookId, 10) },
+        });
+    
+        if (!audioBook) {
+            throw new NotFoundException('This audio  book does not exist. Please enter the correct audio book id.');
+        }
+    
+        const comment = await this.prisma.comments.findUnique({
+            where: { id: parseInt(commentId, 10) },
+        });
+    
+        if (!comment) {
+            throw new NotFoundException('This comment does not exist. Please enter the correct comment id.');
+        }
+    
+        if (comment.userId !== userId) {
+            throw new ForbiddenException('You are not the author of this comment. You cannot delete this comment.');
+        }
+    
+        await this.prisma.comments.updateMany({
+            where: {
+                id: parseInt(commentId, 10),
+            },
+            data: updateData,
+        });
+        return { message: 'Comment updated successfully.' };
+    }
+
+    async updateCommentsByChapterId(bookId: string, chapterId: string, commentId: string, updateData: any, userId: number) {
         const book = await this.prisma.book.findUnique({
             where: { id: parseInt(bookId, 10) },
         });
@@ -186,12 +370,50 @@ export class CommentService{
             throw new NotFoundException('This book does not exist. Please enter the correct book id.');
         }
 
-        const section = await this.prisma.section.findUnique({
-            where: { id: parseInt(sectionId, 10) },
+        const chapter = await this.prisma.chapter.findUnique({
+            where: { id: parseInt(chapterId, 10) },
         });
     
-        if (!section) {
-            throw new NotFoundException('This section does not exist. Please enter the correct section id.');
+        if (!chapter) {
+            throw new NotFoundException('This chapter does not exist. Please enter the correct chapter id.');
+        }
+    
+        const comment = await this.prisma.comments.findUnique({
+            where: { id: parseInt(commentId, 10) },
+        });
+    
+        if (!comment) {
+            throw new NotFoundException('This comment does not exist. Please enter the correct comment id.');
+        }
+    
+        if (comment.userId !== userId) {
+            throw new ForbiddenException('You are not the author of this comment. You cannot delete this comment.');
+        }
+
+        await this.prisma.comments.updateMany({
+            where: {
+                id: parseInt(commentId, 10),
+            },
+            data: updateData,
+        });
+        return { message: 'Comment updated successfully.' };
+    }
+
+    async updateCommentsByEpisodesId(audioBookId: string, episodesId: string, commentId: string, updateData: any, userId: number) {
+        const audioBook = await this.prisma.audioBook.findUnique({
+            where: { id: parseInt(audioBookId, 10) },
+        });
+    
+        if (!audioBook) {
+            throw new NotFoundException('This audio  book does not exist. Please enter the correct audio book id.');
+        }
+
+        const episode = await this.prisma.chapter.findUnique({
+            where: { id: parseInt(episodesId, 10) },
+        });
+    
+        if (!episode) {
+            throw new NotFoundException('This episode does not exist. Please enter the correct episode id.');
         }
     
         const comment = await this.prisma.comments.findUnique({

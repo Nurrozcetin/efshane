@@ -4,11 +4,22 @@ export class CreateCommentDto {
     @IsString()
     content: string;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsInt()
     bookId: number;
 
     @IsOptional()
     @IsInt()
-    sectionId: number;
+    chapterId: number;
+
+    @IsOptional()
+    @IsInt()
+    audioBookId: number;
+
+    @IsOptional()
+    @IsInt()
+    episodeId: number;
+
+    @IsOptional()
+    publish_date: Date = new Date();
 }

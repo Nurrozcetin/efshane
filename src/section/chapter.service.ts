@@ -1,15 +1,15 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "prisma/prisma.service";
-import { CreateSectionDto } from "./dto/create-section.dto";
+import { CreateChapterDto } from "./dto/create-chapter.dto";
 
 @Injectable()
-export class SectionService{
+export class ChapterService{
     constructor(private readonly prisma: PrismaService) {}
-    async createSection(
-        sectionDto: CreateSectionDto,
+    async createChapter(
+        chapterDto: CreateChapterDto,
         userId: number,
     ) {
-        const { title, content, bookId } = sectionDto;
+        const { title, content, bookId } = chapterDto;
         const book = await this.prisma.book.findUnique({
             where: { id: bookId },
         });
@@ -19,10 +19,10 @@ export class SectionService{
         }
 
         if(book.userId !== userId) {
-            throw new ForbiddenException('You are not the author of this book. You cannot add sections.')
+            throw new ForbiddenException('You are not the author of this book. You cannot add chapters.')
         }
 
-        const section = await this.prisma.section.create({
+        const chapter = await this.prisma.chapter.create({
         data: {
             title,
             content,
@@ -31,25 +31,25 @@ export class SectionService{
             date: new Date(),
         },
         });
-        return section;
+        return chapter;
     }
 
-    async getAllSectionsByBookId(authorId: string, bookId: string){
-        const sections = await this.prisma.section.findMany({
+    async getAllChaptersByBookId(authorId: string, bookId: string){
+        const chapters = await this.prisma.chapter.findMany({
             where:{
                 userId: parseInt(authorId, 10),
                 bookId: parseInt(bookId, 10),
             },
         });
 
-        if (!sections || (sections).length === 0) {
+        if (!chapters || (chapters).length === 0) {
             throw new NotFoundException(`No notes found for bookId ${bookId}`);
         }
-        return sections;
+        return chapters;
     }
 
 
-    async deleteAllSectionsByBookId(bookId: string, sectionsId: string, userId: number) {
+    async deleteAllChaptersByBookId(bookId: string, chaptersId: string, userId: number) {
         const book = await this.prisma.book.findUnique({
             where: { id: parseInt(bookId, 10) },
         });
@@ -59,19 +59,19 @@ export class SectionService{
         }
     
         if (book.userId !== userId) {
-            throw new ForbiddenException('You are not the author of this book. You cannot delete sections.');
+            throw new ForbiddenException('You are not the author of this book. You cannot delete chapters.');
         }
     
-        const sections = await this.prisma.section.deleteMany({
+        const chapters = await this.prisma.chapter.deleteMany({
             where: {
-                id: parseInt(sectionsId, 10),
+                id: parseInt(chaptersId, 10),
                 bookId: parseInt(bookId, 10),
             },
         });
-        return sections;
+        return chapters;
     }
 
-    async updateAllSectionsByBookId(bookId: string, sectionsId: string, updateData: any, userId: number){
+    async updateAllChaptersByBookId(bookId: string, chaptersId: string, updateData: any, userId: number){
         const book = await this.prisma.book.findUnique({
             where: { id: parseInt(bookId, 10) },
         });
@@ -81,17 +81,16 @@ export class SectionService{
         }
     
         if (book.userId !== userId) {
-            throw new ForbiddenException('You are not the author of this book. You cannot update sections.');
+            throw new ForbiddenException('You are not the author of this book. You cannot update chapters.');
         }
 
-        const sections = await this.prisma.section.updateMany({
+        const chapters = await this.prisma.chapter.updateMany({
             where: {
-                id: parseInt(sectionsId, 10),
+                id: parseInt(chaptersId, 10),
                 bookId: parseInt(bookId, 10),
             },
             data: updateData,
         });
-        return sections;
+        return chapters;
     }
-    
 }

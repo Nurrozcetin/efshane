@@ -1,6 +1,6 @@
 import { IsInt, IsNotEmpty, IsString } from "class-validator";
 
-export class CreateSectionDto {
+export class CreateChapterDto {
     id: string;
 
     @IsNotEmpty()

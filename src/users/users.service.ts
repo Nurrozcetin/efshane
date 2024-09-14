@@ -1,6 +1,6 @@
 import { PasswordService } from './../auth/services/password.service';
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma, User } from "@prisma/client";
+import { User } from "@prisma/client";
 import { PrismaService } from "prisma/prisma.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 

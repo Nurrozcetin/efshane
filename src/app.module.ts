@@ -58,10 +58,14 @@ import { AudioBookService } from './audio-book/audioBook.service';
 import { ProgressModule } from './progress/progress.module';
 import { ProgressController } from './progress/progress.controller';
 import { ProgressService } from './progress/progress.service';
+import { DictionaryService } from './dictioanary/dictionary.service';
+import { DictionaryModule } from './dictioanary/dictionary,module';
+import { DictionaryController } from './dictioanary/dictionary.controller';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, ChapterModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, LibraryModule, ReadingListModule, BookCaseModule, FollowingModule, BookModule, EpisodeModule, AudioBookModule, ProgressModule],
-  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, ChapterController, CommentController, MessageController, CategoryController, NotifyController, HashtagController, LibraryController, ReadingListController, BookCaseController, FollowingController, BookController, EpisodeController, AudioBookController, ProgressController],
-  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, ChapterService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService, LibraryService, ReadingListService, BookCaseService, FollowingService, BookService, EpisodeService, AudioBookService, ProgressService],
+  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, ChapterModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, LibraryModule, ReadingListModule, BookCaseModule, FollowingModule, BookModule, EpisodeModule, AudioBookModule, ProgressModule, DictionaryModule, HttpModule],
+  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, ChapterController, CommentController, MessageController, CategoryController, NotifyController, HashtagController, LibraryController, ReadingListController, BookCaseController, FollowingController, BookController, EpisodeController, AudioBookController, ProgressController, DictionaryController],
+  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, ChapterService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService, LibraryService, ReadingListService, BookCaseService, FollowingService, BookService, EpisodeService, AudioBookService, ProgressService, DictionaryService],
 })
 export class AppModule {}

@@ -1,10 +1,14 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "prisma/prisma.service";
 import { CreateBookDto } from "./dto/create-book.dto";
+import { LibraryService } from "src/library/library.service";
 
 @Injectable()
 export class BookService{
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly libraryService: LibraryService,
+    ) {}
     async createBook(
         bookDto: CreateBookDto,
         userId: number,
@@ -20,6 +24,7 @@ export class BookService{
                 publish_date: new Date(),
             },
         });
+        await this.libraryService.addBookToLibrary(book.id.toString(), userId, false);
         return book;
     }
 

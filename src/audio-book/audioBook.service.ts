@@ -1,10 +1,13 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "prisma/prisma.service";
 import { CreateAudioBookDto } from "./dto/create-audioBook.dto";
+import { LibraryService } from "src/library/library.service";
 
 @Injectable()
 export class AudioBookService{
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly libraryService: LibraryService) {}
     async createAudioBook(
         audioBookDto: CreateAudioBookDto,
         userId: number,
@@ -21,6 +24,7 @@ export class AudioBookService{
                 publish_date: new Date(),
             },
         });
+        await this.libraryService.addBookToLibrary(audioBook.id.toString(), userId, true);
         return audioBook;
     } 
 

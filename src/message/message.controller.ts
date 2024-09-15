@@ -23,8 +23,8 @@ export class MessageController{
     @Get('inbox')
     async getMessagesForReceiver(@Req() req) {
         const receiverId = req.user.id; 
-            return this.messageService.getMessagesForReceiver(receiverId);
-        }
+        return this.messageService.getMessagesForReceiver(receiverId);
+    }
 
     @UseGuards(JwtAuthGuard)
     @Put(':messageId')

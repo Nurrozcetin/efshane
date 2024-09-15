@@ -17,12 +17,11 @@ export class UserService {
 
   async createUser(createUserDto:CreateUserDto): Promise<User> {
     const { email, username, password, date_of_birth, age, profile_image, image_background, about } = createUserDto;
-    const hashedPassword = await this.passwordService.hashPassword(password);
     const user = await this.prisma.user.create({
       data: {
         email,
         username,
-        password: hashedPassword,
+        password,
         date_of_birth,
         age,
         profile_image,

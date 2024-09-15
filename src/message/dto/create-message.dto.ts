@@ -7,9 +7,8 @@ export class SendMessageDto {
     @IsString()
     content: string;
 
+    @IsInt()
     receiverId: number;
-    
-    senderId: number;
 
     @IsOptional()
     date: Date = new Date();

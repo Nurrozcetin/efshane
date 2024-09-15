@@ -25,6 +25,7 @@ export class MessageService{
         });
         return message;
     }
+    
 
     async getMessagesForReceiver(receiverId: number) {
         const messages = await this.prisma.messages.findMany({

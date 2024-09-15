@@ -1,21 +1,16 @@
-import { Inject, Injectable, forwardRef } from "@nestjs/common";
-import { compare, genSalt, hash } from "bcryptjs";
-import { UserService } from "src/users/users.service";
+import { Injectable } from '@nestjs/common';
+import { genSalt, hash, compare } from 'bcryptjs';
 
 @Injectable()
 export class PasswordService {
-    constructor(
-        @Inject(forwardRef(() => UserService))
-        private userService: UserService,
-    ){}
-
+    // Hash the password
     async hashPassword(password: string): Promise<string> {
-        const salt = await genSalt(10); 
-        return hash(password, salt); 
+        const salt = await genSalt(10);
+        return hash(password, salt);
     }
-    
-    async comparePassword(password: string, hashedPassword: string): Promise<boolean> {
-        return compare(password, hashedPassword); 
+
+    // Compare the plain-text password with the hashed password
+    async comparePassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
+        return compare(plainPassword, hashedPassword);
     }
-    
 }

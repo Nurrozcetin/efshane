@@ -5,7 +5,7 @@ import { EpisodeService } from "./episode.service";
 import { UpdateEpisodeDto } from "./dto/update-episode.dto";
 
 @Controller('episode')
-export class  EpisodeController {
+export class EpisodeController {
     constructor(private readonly episodeService: EpisodeService) {}
 
     @UseGuards(JwtAuthGuard)
@@ -13,8 +13,8 @@ export class  EpisodeController {
     async createEpisodeByAudioBook(
         @Param('audiobookId') audiobookId: string, 
         @Body() body: CreateEpisodeDto, 
-        @Req() req)
-    {
+        @Req() req
+    ) {
         const audiobookID = parseInt(audiobookId, 10);
         const authorId = req.user.id;
         return this.episodeService.createEpisodeByAudioBook(body, authorId, audiobookID);
@@ -34,8 +34,8 @@ export class  EpisodeController {
     async deleteAllEpisodesByAudioBookId(
         @Param('audiobookId') audiobookId: number, 
         @Param('episodesId') episodesId: number, 
-        @Req() req) 
-    {
+        @Req() req
+    ) {
         const authorId = req.user.id;
         return this.episodeService.deleteAllEpisodesByAudioBookId(String(audiobookId), String(episodesId), authorId);
     }
@@ -43,11 +43,11 @@ export class  EpisodeController {
     @UseGuards(JwtAuthGuard)
     @Put(':audiobookId/:episodesId')
     async updateAllEpisodesByAudioBookId(
-        @Param('audiobookId')  audiobookId: number, 
-        @Param('episodesId')  episodesId: number, 
+        @Param('audiobookId') audiobookId: number, 
+        @Param('episodesId') episodesId: number, 
         @Body() body: UpdateEpisodeDto, 
         @Req() req
-    ){
+    ) {
         const authorId = req.user.id;
         return this.episodeService.updateAllEpisodesByAudioBookId(String(audiobookId), String(episodesId), body, authorId);
     }

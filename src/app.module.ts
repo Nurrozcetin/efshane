@@ -65,10 +65,13 @@ import { HttpModule } from '@nestjs/axios';
 import { SpeechToTextService } from './episode/speech-to-text.service';
 import { ModerationService } from './episode/moderation.service';
 import { FileService } from './episode/file.service';
+import { MailerService } from './mailer/mailer.service';
+import { MailerModule } from './mailer/mailer.module';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, ChapterModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, LibraryModule, ReadingListModule, BookCaseModule, FollowingModule, BookModule, EpisodeModule, AudioBookModule, ProgressModule, DictionaryModule, HttpModule],
+  imports: [PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, ChapterModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, LibraryModule, ReadingListModule, BookCaseModule, FollowingModule, BookModule, EpisodeModule, AudioBookModule, ProgressModule, DictionaryModule, HttpModule, MailerModule],
   controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, ChapterController, CommentController, MessageController, CategoryController, NotifyController, HashtagController, LibraryController, ReadingListController, BookCaseController, FollowingController, BookController, EpisodeController, AudioBookController, ProgressController, DictionaryController],
-  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, ChapterService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService, LibraryService, ReadingListService, BookCaseService, FollowingService, BookService, EpisodeService, AudioBookService, ProgressService, DictionaryService, FileService, ModerationService, SpeechToTextService],
+  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, ChapterService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService, LibraryService, ReadingListService, BookCaseService, FollowingService, BookService, EpisodeService, AudioBookService, ProgressService, DictionaryService, FileService, ModerationService, SpeechToTextService, MailerService, ConfigService],
 })
 export class AppModule {}

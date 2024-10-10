@@ -6,6 +6,7 @@ import { LocalAuthGuard } from './guards/local.guards';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { JwtAuthGuard } from './guards/jwt.guards';
 import { UserService } from 'src/users/users.service';
+import { LoginDto } from 'src/users/dto/login.dto';
 
 @Controller('/auth')
 export class AuthController {
@@ -23,7 +24,7 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('/login')
-  async login(@Body() createUserDto: CreateUserDto, @Request() req) {
+  async login(@Body() loginDto: LoginDto, @Request() req) {
       if (!req.user) {
           throw new UnauthorizedException('User not found');
       }

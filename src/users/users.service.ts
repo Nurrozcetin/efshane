@@ -3,6 +3,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { User } from "@prisma/client";
 import { PrismaService } from "prisma/prisma.service";
 import { CreateUserDto } from "./dto/create-user.dto";
+import { UserDto } from "./dto/user.dto";
 
 @Injectable()
 export class UserService {
@@ -16,17 +17,14 @@ export class UserService {
   }
 
   async createUser(createUserDto:CreateUserDto): Promise<User> {
-    const { email, username, password, date_of_birth, age, profile_image, image_background, about } = createUserDto;
+    const { email, username, password, birthdate} = createUserDto;
+    const birthDateObj = new Date(birthdate);
     const user = await this.prisma.user.create({
       data: {
         email,
         username,
         password,
-        date_of_birth,
-        age,
-        profile_image,
-        image_background,
-        about
+        birthdate: birthDateObj
       },
     });
     return user;
@@ -70,8 +68,9 @@ async updatePassword(id:string, newPass: string) {
     });
   }
 
-  async updateUserById(createUserDto:CreateUserDto, id:number): Promise<User> {
-    const { email, username, password, age, profile_image, image_background, about } = createUserDto;
+  async updateUserById(userDto:UserDto, id:number): Promise<User> {
+    const { email, username, password, age, profile_image, image_background, about, birthdate
+     } = userDto;
     const user = await this.prisma.user.update({
       where: {id},
       data: {
@@ -81,7 +80,8 @@ async updatePassword(id:string, newPass: string) {
         profile_image,
         age,
         image_background,
-        about
+        about,
+        birthdate
       },
     });
     if(!user){

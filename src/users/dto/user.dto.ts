@@ -1,7 +1,7 @@
 import { Transform } from 'class-transformer';
-import { IsDate, IsEmail, IsNotEmpty, Matches } from 'class-validator';
+import { IsDate, IsEmail, IsInt, IsNotEmpty, Matches } from 'class-validator';
 
-export class CreateUserDto{
+export class UserDto{
     id: string;
 
     @IsNotEmpty({ message: 'Email can not empty!' })
@@ -13,11 +13,18 @@ export class CreateUserDto{
 
     @IsNotEmpty({ message: 'Password can not empty!' })
     @Matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/, {
-      message: 'Password must contain at least one uppercase letter, one number, and one special character.'
+        message: 'Password must contain at least one uppercase letter, one number, and one special character.'
     })
     password: string;
 
+    @IsInt()
+    age: number;
+    
+    profile_image: string;
+    image_background: string;
+    about?: string;
+
     @IsDate()
-    @Transform(({ value }) => new Date(value))
+    @Transform(({ value }) => new Date(value)) 
     birthdate: Date;
 }

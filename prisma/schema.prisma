@@ -12,10 +12,10 @@ model User {
   email             String    @unique
   username          String    @unique
   password          String
-  date_of_birth     DateTime  
-  profile_image     String
-  age               Int
-  image_background  String
+  birthdate         DateTime  
+  profile_image     String?
+  age               Int?
+  image_background  String?
   about             String?
   announcement      Announcement[]
   book              Book[]

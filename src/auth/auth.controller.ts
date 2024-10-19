@@ -1,4 +1,3 @@
-import { ChangePassword } from './../users/dto/change-pass.dto';
 import { BlacklistService } from './services/blacklist.service';
 import { Controller, Get, Post, UseGuards, Request, Body, UnauthorizedException, Param } from '@nestjs/common';
 import { AuthService } from './services/auth.service';
@@ -49,10 +48,10 @@ export class AuthController {
     };
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post('/changepass/:id')
-  async changePassword(@Param('id') id:string,
-  @Body('newPass') newPass:string) {
-    return this.userService.updatePassword(id, newPass);
-  }
+  // @UseGuards(JwtAuthGuard)
+  // @Post('/changepass/:id')
+  // async changePassword(@Param('id') id:string,
+  // @Body('newPass') newPass:string) {
+  //   return this.userService.updatePassword(email);
+  // }
 }

@@ -1,3 +1,4 @@
+import { UpdatePasswordDto } from './dto/change-pass.dto';
 import { PasswordService } from './../auth/services/password.service';
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { User } from "@prisma/client";
@@ -32,7 +33,7 @@ export class UserService {
     await this.mailerService.sendMail(
       user.email, 
       "Hoş Geldin! 🎉 Efshane'de Harika Bir Kitap Yolculuğuna Hazır mısın?", 
-      "Efshane ailesine katıldığın için çok heyecanlıyız! 🎉🎉 \nBu zengin, yaratıcı ve büyülü dünyaya adım attın! Hem bir okuyucu hem de bir yazar olarak kendini ifade edebileceğin, hayal gücünün sınırlarını zorlayabileceğin bir yolculuğa başlıyorsun. \nBurada seni bekleyenler: \n📚 Sonsuz Kitap Denizi: Her kategoriye göz atarak sevdiğin türlerdeki kitapları keşfet, okumaya başla ve hatta notlar ekleyerek kitaplara kendi yorumunu kat. \n🖋️ Yaratıcılığını Paylaş: Yazdığın kitapları geniş bir kitleyle paylaş, hikayelerini bölümlere ayır, ve sesli kitap formatına dönüştürerek daha fazla kişiye ulaş! \n📣 Yazarlarla ve Okuyucularla Etkileşim: Yazarların duyurularını Twitter benzeri bir akış sisteminde takip et, mesajlaş ve topluluğumuzun bir parçası ol! \n🔔 Anında Bildirimler: Yazarlar yeni bölüm eklediğinde veya duyuru yaptığında hemen haberdar ol. En sevdiğin yazarların gelişmelerini kaçırma! \n🎧 Sesli Kitap Macerası: Kitapları sadece okumakla kalma, aynı zamanda sesli kitaplar oluştur ve dinle. Sesli kitap oluştururken yapay zekamızın uygunsuz içerik kontrolüyle güvende olduğunu bil! \nEfshane'de seninle bir arada olmak bizim için büyük bir mutluluk. Hadi hemen keşfe çık ve kitap dolu bir dünyaya adım at! \n🤩 Soruların mı var? Yardıma mı ihtiyacın var? Bize her zaman ulaşabilirsin! Efshane ailesi olarak her zaman senin yanındayız. \n💬 Tekrar hoş geldin ve keyifli okumalar \nEfshane Ekibi"
+      "Efshane ailesine katıldığın için çok heyecanlıyız! 🎉🎉 \nBu zengin, yaratıcı ve büyülü dünyaya adım attın! Hem bir okuyucu hem de bir yazar olarak kendini ifade edebileceğin, hayal gücünün sınırlarını zorlayabileceğin bir yolculuğa başlıyorsun. \nBurada seni bekleyenler: \n📚 Sonsuz Kitap Denizi: Her kategoriye göz atarak sevdiğin türlerdeki kitapları keşfet, okumaya başla ve hatta notlar ekleyerek kitaplara kendi yorumunu kat. \n🖋️ Yaratıcılığını Paylaş: Yazdığın kitapları geniş bir kitleyle paylaş, hikayelerini bölümlere ayır, ve sesli kitap formatına dönüştürerek daha fazla kişiye ulaş! \n📣 Yazarlarla ve Okuyucularla Etkileşim: Yazarların duyurularını Twitter benzeri bir akış sisteminde takip et, mesajlaş ve topluluğumuzun bir parçası ol! \n🔔 Anında Bildirimler: Yazarlar yeni bölüm eklediğinde veya duyuru yaptığında hemen haberdar ol. En sevdiğin yazarların gelişmelerini kaçırma! \n🎧 Sesli Kitap Macerası: Kitapları sadece okumakla kalma, aynı zamanda sesli kitaplar oluştur ve dinle. Sesli kitap oluştururken yapay zekamızın uygunsuz içerik kontrolüyle güvende olduğunu bil! \nEfshane'de seninle bir arada olmak bizim için büyük bir mutluluk. Hadi hemen keşfe çık ve kitap dolu bir dünyaya adım at! \n🤩 Soruların mı var? Yardıma mı ihtiyacın var? Bize her zaman ulaşabilirsin! Efshane ailesi olarak her zaman senin yanındayız. \n💬 Tekrar hoş geldin ve keyifli okumalar... \nEFshane Ekibi"
     );
     return user;
   }
@@ -47,9 +48,9 @@ export class UserService {
     return user;
   }
 
-  async getUserById(id: string) {
+  async getUserById(email: string) {
     const user = await this.prisma.user.findUnique({
-        where: { id:parseInt(id)},
+        where: { email:email},
     });
     if (!user) {
         throw new NotFoundException();
@@ -57,15 +58,15 @@ export class UserService {
     return user;
 }
 
-async updatePassword(id:string, newPass: string) {
-  const user = await this.getUserById(id);
-  const hashedPass = await this.passwordService.hashPassword(newPass);
+async updatePassword(updatePasswordDto: UpdatePasswordDto) {
+  const {email, pass} = updatePasswordDto;
+  const user = await this.getUserById(email);
+  const hashedPass = await this.passwordService.hashPassword(pass);
   
   await this.prisma.user.update({
-    where: { id: user.id },
+    where: { email: user.email},
     data: { password: hashedPass },
   });
-
   return { message: 'Updated password' };
 }
 
@@ -77,7 +78,7 @@ async updatePassword(id:string, newPass: string) {
 
   async updateUserById(userDto:UserDto, id:number): Promise<User> {
     const { email, username, password, age, profile_image, image_background, about, birthdate
-     } = userDto;
+    } = userDto;
     const user = await this.prisma.user.update({
       where: {id},
       data: {

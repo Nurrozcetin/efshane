@@ -33,6 +33,7 @@ model User {
   comment           Comments[]
   notification      Notification[]
   episodes          Episodes[]
+  category          UserCategory[]
 }
 
 model Announcement {
@@ -192,8 +193,18 @@ model AudioBookHashtags{
 model Category {
   id                    Int       @default(autoincrement()) @id
   name                  String    @unique
+  imageUrl              String
+  userCategories        UserCategory[]
   bookCategories        BookCategory[]
   audioBookCategories   AudioBookCategory[]
+}
+
+model UserCategory {
+  userId        Int
+  categoryId    Int
+  user          User      @relation(fields: [userId], references: [id])
+  category      Category  @relation(fields: [categoryId], references: [id])
+  @@id([userId, categoryId])
 }
 
 model BookCategory {

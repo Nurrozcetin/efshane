@@ -52,4 +52,25 @@ export class CategoryController{
         const audioBookID = parseInt(audioBookId, 10); 
         return await this.categoryService.updateCategoriesForAudioBook(audioBookID, createBookCategoryDto.categoryIds);
     }
+
+    @Post('user')
+    async assignCategoriesToUser(
+        @Body() createBookCategoryDto:  CreateBookCategoryDto
+    ) {
+        const {email, categoryIds} = createBookCategoryDto;
+        return this.categoryService.assignCategoriesToUser(email, categoryIds);
+    }
+
+    @Get('getUser')
+    async getCategoriesByUser(
+        @Body('email') email: string
+    ) {
+        return await this.categoryService.getCategoriesByUser(email);
+    }
+
+    @Get()
+    async getAllCategories() {
+        return await this.categoryService.getAllCategories();
+    }
+    
 }

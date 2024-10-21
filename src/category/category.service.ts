@@ -88,4 +88,65 @@ export class CategoryService {
         
         return { message: 'Categories updated for audio book successfully.' }; 
     }
+
+    async findUserIdByEmail(email: string){
+        if (!email) {
+            throw new Error("Email değeri boş olamaz.");
+        }
+        const user = await this.prisma.user.findUnique({
+            where: {
+                email: email 
+            },
+            select: {
+                id: true
+            },    
+        });
+        if (!user) {
+            throw new Error('User not found'); 
+        }
+        return user.id; 
+    }
+
+    async assignCategoriesToUser(email: string, categoryIds: number[]) {
+        if (!email || typeof email !== 'string') {
+            throw new Error("Geçersiz kullanıcı e-postası.");
+        }
+    
+        if (!Array.isArray(categoryIds) || categoryIds.length === 0) {
+            throw new Error("Geçersiz veya boş kategori ID'leri.");
+        }
+    
+        const userId = await this.findUserIdByEmail(email);
+    
+        if (!userId) {
+            throw new Error("Kullanıcı bulunamadı.");
+        }
+    
+        const userCategories = categoryIds.map((categoryId) => ({
+            userId,
+            categoryId,
+        }));
+    
+        await this.prisma.userCategory.createMany({
+            data: userCategories,
+        });
+    
+        return { message: 'Kategoriler kullanıcıya başarıyla atandı.' };
+    }
+    
+    async getCategoriesByUser(email: string) {
+        const userId = await this.findUserIdByEmail(email);
+        return this.prisma.userCategory.findMany({
+            where: {
+                userId
+            },
+            include:{
+                category: true
+            }
+        });
+    }
+
+    async getAllCategories() {
+        return await this.prisma.category.findMany(); 
+    }
 }

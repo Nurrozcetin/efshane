@@ -9,6 +9,10 @@ export class CreateBookDto {
 
     @IsNotEmpty()
     @IsString()
+    summary: string;
+
+    @IsNotEmpty()
+    @IsString()
     bookCover: string;
 
     publish: boolean;

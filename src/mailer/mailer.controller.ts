@@ -1,6 +1,8 @@
-import { Body, Controller, Post, Param } from '@nestjs/common';
+import { Body, Controller, Post, Param, UseGuards } from '@nestjs/common';
 import { MailerService } from './mailer.service';
 import { ResetPasswordDto } from './dto/resetPass.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guards';
+import { ContactUsDto } from './dto/contactUs.dto';
 
 @Controller('mail')
 export class MailerController {
@@ -30,5 +32,14 @@ export class MailerController {
         }
 
         return { message: 'Doğrulama kodu başarısız.' };
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('contactUs')
+    async sendContactMail(
+        @Body() contactUsDto: ContactUsDto
+    ) {
+        await this.mailerService.sendContactMail(contactUsDto);
+        return { message: 'Mail başarıyla gönderildi.' };
     }
 }

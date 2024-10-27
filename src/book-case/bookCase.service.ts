@@ -82,6 +82,40 @@ export class BookCaseService {
         return bookCase;
     }
 
+    async getLastReadBook(userId: number) {
+        const lastReadBook = await this.prisma.readingProgress.findFirst({
+            where: { userId },
+            orderBy: { lastreading: 'desc' },  
+            select: {
+                book: {
+                    select: {
+                        id: true,
+                        title: true,
+                        summary: true,
+                        bookCover: true,
+                        analysis: {
+                            select: {
+                                id: true,
+                                like_count: true,
+                                comment_count: true,
+                                read_count: true,
+                            }
+                        }
+                    },
+                },
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        profile_image: true,
+                    }
+                }
+            },
+        });
+        return lastReadBook;
+    }
+    
+    
     async removeBookFromBookCase(bookId: number, userId: number, isAudioBook: boolean) {
         const bookCase =  await this.prisma.bookCase.findUnique({
             where:{

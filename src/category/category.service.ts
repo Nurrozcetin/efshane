@@ -89,6 +89,24 @@ export class CategoryService {
         return { message: 'Categories updated for audio book successfully.' }; 
     }
 
+    async findUserIdById(userId: number){
+        if (!userId) {
+            throw new Error("userId değeri boş olamaz.");
+        }
+        const user = await this.prisma.user.findUnique({
+            where: {
+                id: userId
+            },
+            select: {
+                id: true
+            },    
+        });
+        if (!user) {
+            throw new Error('User not found'); 
+        }
+        return user.id; 
+    }
+
     async findUserIdByEmail(email: string){
         if (!email) {
             throw new Error("Email değeri boş olamaz.");
@@ -134,16 +152,56 @@ export class CategoryService {
         return { message: 'Kategoriler kullanıcıya başarıyla atandı.' };
     }
     
-    async getCategoriesByUser(email: string) {
-        const userId = await this.findUserIdByEmail(email);
-        return this.prisma.userCategory.findMany({
+    async getCategoriesByUser(userId: number) {
+        const suggestions = await this.prisma.userCategory.findMany({
             where: {
                 userId
             },
             include:{
-                category: true
-            }
+                category: {
+                    select: {
+                        bookCategories: {
+                            select: {
+                                book: {
+                                    select: {
+                                        id: true,
+                                        title: true,
+                                        bookCover: true,
+                                        user: {
+                                            select: {
+                                                id: true,
+                                                username: true,
+                                                profile_image: true,
+                                            },
+                                        },
+                                        analysis: {
+                                            select: {
+                                                read_count: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                    }
+                },
+            },
         });
+
+        const books = suggestions.flatMap(suggestion =>
+            suggestion.category.bookCategories.map(book => ({
+                id: book.book.id,
+                title: book.book.title,
+                bookCover: book.book.bookCover,
+                readCount: book.book.analysis.reduce((acc, item) => acc + (item.read_count || 0), 0),
+                username: book.book.user.username,
+                profile_image: book.book.user.profile_image
+            }))
+        );
+        
+        books.sort((a, b) => b.readCount - a.readCount);
+        return books;        
     }
 
     async getAllCategories() {

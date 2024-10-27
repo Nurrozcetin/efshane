@@ -13,11 +13,12 @@ export class BookService{
         bookDto: CreateBookDto,
         userId: number,
     ) {
-        const { title, bookCover, publish} = bookDto;
+        const { title, summary, bookCover, publish} = bookDto;
 
         const book = await this.prisma.book.create({
             data: {
                 title,
+                summary,
                 bookCover,
                 userId,
                 publish,
@@ -28,7 +29,7 @@ export class BookService{
         return book;
     }
 
-    async getAllBook(authorId: string) {
+    async getAllBookByAuthor(authorId: string) {
         const books = await this.prisma.book.findMany({
             where: {
                 userId: parseInt(authorId, 10), 
@@ -44,6 +45,68 @@ export class BookService{
         return books;
     }
 
+    async getAllBook() {
+        const currentYear = new Date().getFullYear();
+        const books = await this.prisma.book.findMany({
+            where: {
+                publish_date: {
+                    gte: new Date(`${currentYear}-01-01`), 
+                    lt: new Date(`${currentYear + 1}-01-01`), 
+                },
+            },
+            orderBy: { publish_date: 'desc' },
+            select: {
+                id: true,
+                title: true,
+                bookCover: true,
+                user: {
+                    select: {
+                        username: true,
+                        profile_image: true,
+                    }
+                }
+            }
+        });
+    
+        if (!books || books.length === 0) {
+            throw new NotFoundException(`Bu yıl yayınlanan kitap bulunamadı`);
+        }
+        return books;
+    }
+    
+    async getTrendsBook() {
+        const books = await this.prisma.book.findMany({
+            select: {
+                id: true,
+                title: true,
+                bookCover: true,
+                user: {
+                    select: {
+                        username: true,
+                        profile_image: true,
+                    }
+                },
+                analysis: {
+                    select: {
+                        read_count: true,
+                    }
+                }
+            }
+        });
+    
+        if (!books || books.length === 0) {
+            throw new NotFoundException(`Trend kitap bulunamadı`);
+        }
+    
+        books.sort((a, b) => {
+            const aReadCount = a.analysis.reduce((sum, item) => sum + (item.read_count || 0), 0);
+            const bReadCount = b.analysis.reduce((sum, item) => sum + (item.read_count || 0), 0);
+            return bReadCount - aReadCount;
+        });
+    
+        return books;
+    }
+    
     async deleteBook(bookId: string, userId: number) {
         const book = await this.prisma.book.findUnique({
             where: { id: parseInt(bookId, 10) },

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
 import { ResetPasswordDto } from './dto/resetPass.dto';
+import { ContactUsDto } from './dto/contactUs.dto';
 
 @Injectable()
 export class MailerService {
@@ -69,5 +70,14 @@ export class MailerService {
         }
 
         return true;
+    }
+
+    async sendContactMail(contactUsDto: ContactUsDto) {
+        const { email, title, description } = contactUsDto;
+        await this.sendMail(
+            "efshaneapp@gmail.com",
+            `Bize Ulaşın - ${title}`,
+            `${description}`
+        );
     }
 }

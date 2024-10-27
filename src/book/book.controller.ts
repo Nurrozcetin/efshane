@@ -19,12 +19,24 @@ export class  BookController {
     }
 
     @UseGuards(JwtAuthGuard)
-    @Get()
-    async getAllBook(
+    @Get('all')
+    async getAllBookByAuthor(
         @Req() req
     ) {
         const authorID = req.user.id;
-        return this.bookService.getAllBook(String(authorID));
+        return this.bookService.getAllBookByAuthor(String(authorID));
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get()
+    async getAllBook() {
+        return this.bookService.getAllBook();
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('trend')
+    async getTrendsBook() {
+        return this.bookService.getTrendsBook();
     }
     
     @UseGuards(JwtAuthGuard)

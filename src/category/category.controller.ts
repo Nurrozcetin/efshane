@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Put, Req, UseGuards } from "@nestjs/common";
 import { CategoryService } from "./category.service";
 import { CreateBookCategoryDto } from "./dto/assign-book-category.dto";
 import { JwtAuthGuard } from "src/auth/guards/jwt.guards";
@@ -61,11 +61,13 @@ export class CategoryController{
         return this.categoryService.assignCategoriesToUser(email, categoryIds);
     }
 
+    @UseGuards(JwtAuthGuard)
     @Get('getUser')
     async getCategoriesByUser(
-        @Body('email') email: string
+        @Req() req
     ) {
-        return await this.categoryService.getCategoriesByUser(email);
+        const userId = req.user.id;
+        return await this.categoryService.getCategoriesByUser(userId);
     }
 
     @Get()

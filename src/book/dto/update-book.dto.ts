@@ -8,6 +8,10 @@ export class UpdateBookDto {
     title: string;
 
     @IsOptional()
+    @IsString()
+    summary: string;
+
+    @IsOptional()
     bookCover: string;
 
     publish_date: Date = new Date();

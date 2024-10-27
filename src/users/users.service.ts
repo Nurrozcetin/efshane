@@ -40,7 +40,7 @@ export class UserService {
 
   async getUserByEmail(email:string){
     const user = await this.prisma.user.findUnique({
-      where: {email},
+      where: {email:email},
     })
     if(!user){
       throw new NotFoundException();
@@ -48,19 +48,20 @@ export class UserService {
     return user;
   }
 
-  async getUserById(email: string) {
-    const user = await this.prisma.user.findUnique({
-        where: { email:email},
-    });
-    if (!user) {
-        throw new NotFoundException();
-    }
-    return user;
+  async getUserById(userId: number) {
+    return await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+          id: true,
+          username: true,
+          profile_image: true 
+      }
+  });
 }
 
 async updatePassword(updatePasswordDto: UpdatePasswordDto) {
   const {email, pass} = updatePasswordDto;
-  const user = await this.getUserById(email);
+  const user = await this.getUserByEmail(email);
   const hashedPass = await this.passwordService.hashPassword(pass);
   
   await this.prisma.user.update({

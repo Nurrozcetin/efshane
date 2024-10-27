@@ -29,6 +29,14 @@ export class BookCaseController {
     }
 
     @UseGuards(JwtAuthGuard)
+    @Get('last')
+    async getLastReadBook(@Req() req) {
+        const userId = req.user.id; 
+        const lastReadBook = await this.bookCaseService.getLastReadBook(userId);
+        return lastReadBook;
+    }    
+
+    @UseGuards(JwtAuthGuard)
     @Delete('delete/:bookId')
     async removeBookFromBookCase(
         @Param('bookId') bookId: string,

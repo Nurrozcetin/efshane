@@ -49,6 +49,7 @@ model Announcement {
 model Book {
   id                Int             @default(autoincrement()) @id
   title             String
+  summary           String 
   chapter           Chapter[]
   analysis          Analysis[]
   publish_date      DateTime        @default(now())
@@ -83,15 +84,15 @@ model Chapter {
 model Analysis {
   id                Int       @default(autoincrement()) @id
   like_count        Int
-  view_count        Int
+  comment_count     Int
   read_count        Int
-  chapterId         Int
+  chapterId         Int?
   chapter           Chapter?  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-  bookId            Int
+  bookId            Int?
   book              Book?     @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  audioBookId       Int
+  audioBookId       Int?
   audioBook         AudioBook?     @relation(fields: [audioBookId], references: [id], onDelete: Cascade)
-  episodeId         Int
+  episodeId         Int?
   episode           Episodes?     @relation(fields: [episodeId], references: [id], onDelete:Cascade)
 }
 
@@ -233,12 +234,13 @@ model Notification {
 }
 
 model ReadingProgress {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  bookId    Int
-  progress  Int     //BI BASLANGIC NOKTAMDAN ILERLEYEBILDIGIM NOKTAYA KADAR OLAN KISIM / TAMAMI
-  user      User    @relation(fields: [userId], references: [id])
-  book      Book    @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  bookId      Int
+  lastreading DateTime  @updatedAt
+  progress    Int       //BI BASLANGIC NOKTAMDAN ILERLEYEBILDIGIM NOKTAYA KADAR OLAN KISIM / TAMAMI
+  user        User      @relation(fields: [userId], references: [id])
+  book        Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
   @@unique([userId, bookId])
 }
 model PrivateNotes{
@@ -265,6 +267,7 @@ model BookCase { //kullanicinin okudugu/dinledigi ve okumaya/dinlemeye devam ett
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   books         Book[]       @relation("BookCaseBooks")   
   audioBooks    AudioBook[]  @relation("BookCaseAudioBooks")
+  createdAt     DateTime     @default(now())  
 }
 
 model ReadingList {

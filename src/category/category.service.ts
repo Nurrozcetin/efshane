@@ -205,6 +205,71 @@ export class CategoryService {
     }
 
     async getAllCategories() {
-        return await this.prisma.category.findMany(); 
+        return await this.prisma.category.findMany({
+            select: {
+                id: true,
+                name: true,
+                imageUrl: true,
+            },
+        }); 
+    }
+
+
+    async getBookByCategories(categoryName: string) {
+        try {
+            if (!categoryName) {
+                throw new Error("Kategori adı geçerli değil.");
+            }
+    
+            const booksByCategories = await this.prisma.category.findUnique({
+                where: {
+                    name: categoryName,
+                },
+                select: {
+                    name: true,
+                    bookCategories: {
+                        select: {
+                            book: {
+                                select: {
+                                    id: true,
+                                    title: true,
+                                    bookCover: true,
+                                    user: {
+                                        select: {
+                                            username: true,
+                                            profile_image: true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+    
+            if (!booksByCategories || !booksByCategories.bookCategories || booksByCategories.bookCategories.length === 0) {
+                throw new Error("Kategori bulunamadı veya bu kategoriye ait kitap yok.");
+            }
+    
+            const baseUrl = 'http://localhost:5173'; 
+            const books = booksByCategories.bookCategories.reduce((acc, bookCategory) => {
+                const book = bookCategory.book;
+                if (book) {
+                    acc.push({
+                        id: book.id,
+                        title: book.title,
+                        bookCover: `${baseUrl}/${book.bookCover}`, 
+                        username: book.user.username,
+                        profile_image: `${baseUrl}/${book.user.profile_image}`, 
+                    });
+                }
+                return acc;
+            }, []);
+            console.log("Kategori detayları:", books);
+            return books;
+        } catch (error) {
+            console.error("Hata:", error);
+            throw new Error("Kitapları getirirken bir hata oluştu."); 
+        }
     }
 }

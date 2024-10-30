@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Header, Param, Patch, Post, Put, Req, UseGuards } from "@nestjs/common";
 import { CategoryService } from "./category.service";
 import { CreateBookCategoryDto } from "./dto/assign-book-category.dto";
 import { JwtAuthGuard } from "src/auth/guards/jwt.guards";
@@ -74,5 +74,13 @@ export class CategoryController{
     async getAllCategories() {
         return await this.categoryService.getAllCategories();
     }
-    
+
+    @Get('getBookByCategory/:categoryName')
+    @Header('Cache-Control', 'no-store') 
+    async getBookByCategories(
+        @Param('categoryName') categoryName: string, 
+    ) {
+        return await this.categoryService.getBookByCategories(categoryName); 
+    }
+
 }

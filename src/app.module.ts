@@ -1,3 +1,4 @@
+import { EncryptionService } from './message/encryption.service';
 import { BookService } from './book/book.service';
 import { LibraryModule } from './library/library.module';
 import { Module } from '@nestjs/common';
@@ -27,7 +28,6 @@ import { CommentService } from './comment/comment.service';
 import { MessageService } from './message/message.service';
 import { MessageController } from './message/message.controller';
 import { MessageModule } from './message/message.module';
-import { EncryptionService } from './message/encryption.service';
 import { CategoryModule } from './category/category.module';
 import { CategoryController } from './category/category.controller';
 import { CategoryService } from './category/category.service';

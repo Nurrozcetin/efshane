@@ -36,13 +36,13 @@ export class AuthService {
             email: user.email,
         };
         const token = this.jwtService.sign(payload);
+        console.log(token);
         return {
             accessToken: token,
         };
     }
 
     async register(createUserDto: CreateUserDto) {
-        // Hash the password before saving the user
         createUserDto.password = await this.passwordService.hashPassword(createUserDto.password);
 
         const user = await this.userService.createUser(createUserDto);

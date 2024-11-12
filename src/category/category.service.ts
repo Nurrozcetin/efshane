@@ -265,7 +265,6 @@ export class CategoryService {
                 }
                 return acc;
             }, []);
-            console.log("Kategori detayları:", books);
             return books;
         } catch (error) {
             console.error("Hata:", error);

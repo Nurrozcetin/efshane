@@ -34,6 +34,7 @@ model User {
   notification      Notification[]
   episodes          Episodes[]
   category          UserCategory[]
+  visible           MessageVisibility[]
 }
 
 model Announcement {
@@ -126,10 +127,21 @@ model Messages {
   id          Int      @default(autoincrement()) @id
   date        DateTime @default(now())
   content     String
+  isRead      Boolean  @default(false)
   receiverId  Int
   senderId    Int
   receiver    User    @relation("Receiver", fields: [receiverId], references: [id])
   sender      User    @relation("Sender", fields: [senderId], references: [id])
+  visible     MessageVisibility[]
+}
+
+model MessageVisibility {
+  id          Int      @default(autoincrement()) @id
+  messageId   Int
+  userId      Int
+  isVisible   Boolean  @default(true)
+  message     Messages @relation(fields: [messageId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
 }
 
 model AudioBook {

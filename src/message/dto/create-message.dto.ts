@@ -1,15 +1,17 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsInt, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 
 export class SendMessageDto {
     id: string;
 
     @IsNotEmpty()
     @IsString()
+    @MaxLength(255)
     content: string;
 
-    @IsInt()
-    receiverId: number;
+    @IsNotEmpty()
+    @IsString()
+    receiverUserName: string;
 
     @IsOptional()
-    date: Date = new Date();
+    date : Date = new Date();
 }

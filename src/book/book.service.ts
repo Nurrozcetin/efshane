@@ -1,7 +1,9 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "prisma/prisma.service";
 import { CreateBookDto } from "./dto/create-book.dto";
 import { LibraryService } from "src/library/library.service";
+import { UpdateAudioBookDto } from "src/audio-book/dto/update-audiobook.dto";
+import { UpdateBookDto } from "./dto/update-book.dto";
 
 @Injectable()
 export class BookService{
@@ -11,22 +13,110 @@ export class BookService{
     ) {}
     async createBook(
         bookDto: CreateBookDto,
-        userId: number,
+        userId: string,
     ) {
-        const { title, summary, bookCover, publish} = bookDto;
+        const { title, summary, bookCover, hashtags, categories, ageRange, bookCopyright, isAudioBook} = bookDto;
+
+        const userID = parseInt(userId);
+        const existingBookTitle = await this.prisma.book.findUnique({
+            where: {
+                title,
+            },
+        });
+    
+        if (existingBookTitle) {
+            throw new Error('A book with this title already exists. Please choose a different title.');
+        }
+
+        const existingBookSummary = await this.prisma.book.findUnique({
+            where: {
+                summary,
+            },
+        });
+    
+        if (existingBookSummary) {
+            throw new Error('A book with this summary already exists. Please change your books summary.');
+        }
+
+        const bookCopyRight = parseInt(bookCopyright);
+        const ageRangeId = parseInt(ageRange);
+        const categoryId = parseInt(categories);
 
         const book = await this.prisma.book.create({
             data: {
                 title,
                 summary,
                 bookCover,
-                userId,
-                publish,
+                isAudioBook,
+                userId: userID,
+                publish : false,
                 publish_date: new Date(),
+                hashtags: {
+                    create: (Array.isArray(hashtags) ? hashtags : []).map((tag: string) => ({
+                        hashtag: {
+                            connectOrCreate: {
+                                where: { name: tag },
+                                create: { name: tag },
+                            },
+                        },
+                    })),
+                },
+                categories: {
+                    create: {
+                        category: {
+                            connect: { id: categoryId },
+                        },
+                    }
+                },
+                ageRange: {
+                    create: {
+                        range: {
+                            connect: { id: ageRangeId }, 
+                        },
+                    },
+                },
+                bookCopyright: {
+                    create: {
+                        copyright: {
+                            connect: { id: bookCopyRight }, 
+                        },
+                    },
+                }
             },
         });
-        await this.libraryService.addBookToLibrary(book.id.toString(), userId, false);
+        
+        await this.libraryService.addBookToLibrary(book.id.toString(), userID, false);
         return book;
+    }
+    
+    async getAgeRange() {
+        try {
+            const ageRange = await this.prisma.range.findMany({
+                select: {
+                    id: true,
+                    range: true,
+                }
+            });
+            return ageRange;
+        } catch (error) {
+            console.error('Veri alırken hata oluştu:', error);
+            throw new Error('Yaş aralıkları alınamadı');
+        }
+    }
+
+    async getCopyRight() {
+        try {
+            const copyright = await this.prisma.copyright.findMany({
+                select: {
+                    id: true,
+                    copyright: true,
+                }
+            });
+            return copyright;
+        } catch (error) {
+            console.error('Veri alırken hata oluştu:', error);
+            throw new Error('Telif hakkı verileri alınamadı');
+        }
     }
 
     async getAllBookByAuthor(authorId: string) {
@@ -128,26 +218,97 @@ export class BookService{
         return books;
     }
 
-    async updateBook(bookId: string, updateData: any, userId: number){
+    async updateBook(decodedTitle: string, bookDto: UpdateBookDto, userId: number) {
+        const {
+            title,
+            summary,
+            bookCover,
+            hashtags,
+            categories,
+            ageRange,
+            bookCopyright,
+            isAudioBook,
+        } = bookDto;
+    
+        if (!decodedTitle) {
+            throw new BadRequestException("Title parameter is required.");
+        }
+    
         const book = await this.prisma.book.findUnique({
-            where: { id: parseInt(bookId, 10) },
+            where: { title: decodedTitle },
         });
     
         if (!book) {
-            throw new NotFoundException('This book does not exist. Please enter the correct book id.');
+            throw new NotFoundException("This book does not exist. Please enter the correct title.");
         }
     
         if (book.userId !== userId) {
-            throw new ForbiddenException('You are not the author of this book. You cannot update book.');
+            throw new ForbiddenException("You are not the author of this book. You cannot update book.");
+        }
+    
+        let hashtagsData = {};
+        if (hashtags && Array.isArray(hashtags)) {
+            hashtagsData = {
+                hashtags: {
+                    deleteMany: {},
+                    create: hashtags.map((tag: string) => ({
+                        hashtag: {
+                            connectOrCreate: {
+                                where: { name: tag },
+                                create: { name: tag },
+                            },
+                        },
+                    })),
+                },
+            };
+        }
+    
+        let categoryData = {};
+        if (categories && Array.isArray(categories)) {
+            categoryData = {
+                categories: {
+                    create: categories.map((categoryId: number) => ({
+                        category: { connect: { id: categoryId } },
+                    })),
+                },
+            };
+        }
+    
+        let ageRangeData = {};
+        if (ageRange && Array.isArray(ageRange)) {
+            ageRangeData = {
+                ageRange: {
+                    create: ageRange.map((rangeId: number) => ({
+                        range: { connect: { id: rangeId } },
+                    })),
+                },
+            };
+        }
+    
+        let copyrightData = {};
+        if (bookCopyright && Array.isArray(bookCopyright)) {
+            copyrightData = {
+                bookCopyright: {
+                    create: bookCopyright.map((copyrightId: number) => ({
+                        copyright: { connect: { id: copyrightId } },
+                    })),
+                },
+            };
         }
 
-        const books = await this.prisma.book.updateMany({
-            where: {
-                id: parseInt(bookId, 10),
+        const updatedBook = await this.prisma.book.update({
+            where: { id:book.id }, 
+            data: {
+                title,
+                summary,
+                bookCover,
+                isAudioBook,
+                ...hashtagsData,
+                ...categoryData,
+                ...ageRangeData,
+                ...copyrightData,
             },
-            data: updateData,
         });
-        return books;
+        return updatedBook;
     }
-    
 }

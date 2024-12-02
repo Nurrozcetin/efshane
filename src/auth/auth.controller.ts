@@ -1,5 +1,5 @@
 import { BlacklistService } from './services/blacklist.service';
-import { Controller, Get, Post, UseGuards, Request, Body, UnauthorizedException, Param } from '@nestjs/common';
+import { Controller, Get, Post, UseGuards, Request, Body, UnauthorizedException, Param, Req } from '@nestjs/common';
 import { AuthService } from './services/auth.service';
 import { LocalAuthGuard } from './guards/local.guards';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
@@ -23,11 +23,13 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('/login')
-  async login(@Body() loginDto: LoginDto, @Request() req) {
+  async login(@Body() loginDto: LoginDto, @Req() req) {
       if (!req.user) {
           throw new UnauthorizedException('User not found');
       }
-      return this.authService.login(req.user);
+      const {accessToken} = await this.authService.login(req.user);
+      return { accessToken };
+      //return this.authService.login(req.user);
   }
 
   @Post('/logout') 
@@ -41,7 +43,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('/protected')
-  protect(@Request() req) {
+  protect(@Req() req) {
     return {
       message: 'This route is protected, but this user has access',
       user: req.user,

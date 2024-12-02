@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsString } from "class-validator";
+import { IsArray, IsBoolean, IsInt, IsNotEmpty, IsNumber, IsString } from "class-validator";
 
 export class CreateBookDto {
     id: string;
@@ -15,7 +15,17 @@ export class CreateBookDto {
     @IsString()
     bookCover: string;
 
-    publish: boolean;
+    @IsBoolean()
+    isAudioBook: boolean;
+    
+    @IsArray()
+    @IsString({ each: true })
+    hashtags?: string[];
+    
+    @IsString()
+    categories: string; 
+    ageRange: string;
+    bookCopyright: string;
 
     publish_date: Date = new Date();
 }

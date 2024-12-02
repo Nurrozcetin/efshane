@@ -49,19 +49,22 @@ model Announcement {
 
 model Book {
   id                Int             @default(autoincrement()) @id
-  title             String
-  summary           String 
+  title             String          @unique
+  summary           String          @unique
   chapter           Chapter[]
   analysis          Analysis[]
   publish_date      DateTime        @default(now())
   bookCover         String
   comments          Comments[]
   publish           Boolean         @default(false)
+  isAudioBook       Boolean      
   hashtags          BookHashtags[]
   audioBook         AudioBook[]
   categories        BookCategory[]
   privateNote       PrivateNotes[]
   progress          ReadingProgress[]
+  ageRange          AgeRange[]      
+  bookCopyright     BookCopyright[]
   userId            Int
   user              User            @relation(fields: [userId], references: [id])
   library           Library[]       @relation("LibraryBooks")
@@ -73,7 +76,9 @@ model Chapter {
   id          Int         @default(autoincrement()) @id
   title       String
   content     String
+  image       String?  
   date        DateTime    @default(now())
+  publish     Boolean     @default(false)
   bookId      Int
   book        Book        @relation(fields: [bookId], references: [id])
   userId      Int
@@ -203,6 +208,33 @@ model AudioBookHashtags{
   @@id([audioBookId, hashtagsId])
 }
 
+model Range {
+  id          Int      @default(autoincrement()) @id
+  range       String   @unique
+  ageRange    AgeRange[]
+}
+
+model AgeRange {
+  rangeId     Int      
+  bookId      Int
+  book        Book    @relation(fields: [bookId], references: [id])
+  range       Range   @relation(fields: [rangeId], references: [id])
+  @@id([bookId, rangeId])
+}
+
+model Copyright {
+  id              Int      @default(autoincrement()) @id
+  copyright       String
+  bookCopyRight   BookCopyright[]
+}
+
+model BookCopyright {
+  bookCopyrightId   Int
+  bookId            Int
+  book              Book    @relation(fields: [bookId], references: [id])
+  copyright         Copyright @relation(fields: [bookCopyrightId], references: [id])
+  @@id([bookId, bookCopyrightId])
+}
 model Category {
   id                    Int       @default(autoincrement()) @id
   name                  String    @unique

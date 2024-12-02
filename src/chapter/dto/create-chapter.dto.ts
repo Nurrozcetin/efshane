@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateChapterDto {
     id: string;
@@ -6,9 +6,16 @@ export class CreateChapterDto {
     @IsNotEmpty()
     @IsString()
     title: string;
-    content: string;
 
     @IsNotEmpty()
-    @IsInt()
+    @IsString()
+    content: string;
+
+    @IsOptional()
+    @IsString()
+    image?: string;
+
     bookId: number;
+
+    date: Date = new Date();
 }

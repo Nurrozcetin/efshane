@@ -1,6 +1,6 @@
 import { UpdatePasswordDto } from './dto/change-pass.dto';
 import { PasswordService } from './../auth/services/password.service';
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { User } from "@prisma/client";
 import { PrismaService } from "prisma/prisma.service";
 import { CreateUserDto } from "./dto/create-user.dto";
@@ -49,14 +49,24 @@ export class UserService {
   }
 
   async getUserById(userId: number) {
-    return await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-          id: true,
-          username: true,
-          profile_image: true 
-      }
-  });
+    if (!userId || typeof userId !== 'number') {
+        throw new BadRequestException("Invalid user ID provided.");
+    }
+
+    const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+            id: true,
+            username: true,
+            profile_image: true,
+        },
+    });
+
+    if (!user) {
+        throw new NotFoundException("User not found.");
+    }
+
+    return user;
 }
 
 async updatePassword(updatePasswordDto: UpdatePasswordDto) {

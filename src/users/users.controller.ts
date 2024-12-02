@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Req, UseGuards } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Req, UseGuards } from "@nestjs/common";
 import { UserService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UserDto } from "./dto/user.dto";
@@ -26,11 +26,14 @@ export class UserController{
 
     @UseGuards(JwtAuthGuard)
     @Get()
-    async getProfile(
-        @Req() req
-    ) {
-        const userId = req.user.id; 
-        return this.userService.getUserById(userId);  
+    async getProfile(@Req() req) {
+        const userId = req.user?.id;
+        if (!userId) {
+            throw new BadRequestException("Invalid user ID provided.");
+        }
+
+        const user = await this.userService.getUserById(userId);
+        return user;
     }
 
     @Delete(':id')

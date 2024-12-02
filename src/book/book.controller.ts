@@ -3,6 +3,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put, Req, UseGuards } from 
 import { JwtAuthGuard } from "src/auth/guards/jwt.guards";
 import { UpdateBookDto } from './dto/update-book.dto';
 import { CreateBookDto } from './dto/create-book.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('book')
 export class  BookController {
@@ -18,6 +19,18 @@ export class  BookController {
         return this.bookService.createBook(body, authorId);
     }
 
+    @Get('ageRange')
+    async getAgeRange(
+    ) {
+        return this.bookService.getAgeRange();
+    }
+
+    @Get('copyright')
+    async getCopyRight(
+    ) {
+        return this.bookService.getCopyRight();
+    }
+
     @UseGuards(JwtAuthGuard)
     @Get('all')
     async getAllBookByAuthor(
@@ -27,13 +40,11 @@ export class  BookController {
         return this.bookService.getAllBookByAuthor(String(authorID));
     }
 
-    @UseGuards(JwtAuthGuard)
     @Get()
     async getAllBook() {
         return this.bookService.getAllBook();
     }
 
-    @UseGuards(JwtAuthGuard)
     @Get('trend')
     async getTrendsBook() {
         return this.bookService.getTrendsBook();
@@ -50,13 +61,14 @@ export class  BookController {
     }
 
     @UseGuards(JwtAuthGuard)
-    @Put(':bookId')
+    @Put(':bookTitle')
     async updateBook(
-        @Param('bookId') bookId: number, 
+        @Param('bookTitle') bookTitle: string,  
         @Body() body: UpdateBookDto, 
         @Req() req
     ){
         const authorId = req.user.id;
-        return this.bookService.updateBook(String(bookId), body, authorId);
+        const decodedTitle = decodeURIComponent(bookTitle);
+        return this.bookService.updateBook(decodedTitle, body, authorId);
     }
 }

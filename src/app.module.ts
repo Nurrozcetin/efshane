@@ -71,6 +71,9 @@ import { ConfigService } from '@nestjs/config';
 import { MailerController } from './mailer/mailer.controller';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { HelpService } from './help/help.service';
+import { HelpController } from './help/help.controller';
+import { HelpModule } from './help/help.module';
 
 
 @Module({
@@ -79,8 +82,8 @@ import { join } from 'path';
       rootPath: join(__dirname, '..', '/efshane_front/Efshane/public'),
       serveRoot: '/public/', 
     }),
-    PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, ChapterModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, LibraryModule, ReadingListModule, BookCaseModule, FollowingModule, BookModule, EpisodeModule, AudioBookModule, ProgressModule, DictionaryModule, HttpModule, MailerModule],
-  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, ChapterController, CommentController, MessageController, CategoryController, NotifyController, HashtagController, LibraryController, ReadingListController, BookCaseController, FollowingController, BookController, EpisodeController, AudioBookController, ProgressController, DictionaryController, MailerController],
-  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, ChapterService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService, LibraryService, ReadingListService, BookCaseService, FollowingService, BookService, EpisodeService, AudioBookService, ProgressService, DictionaryService, FileService, ModerationService, SpeechToTextService, MailerService, ConfigService],
+    PrismaModule, UsersModule, AuthModule, NotesModule, AnalysisModule, AnnouncementModule, ChapterModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, LibraryModule, ReadingListModule, BookCaseModule, FollowingModule, BookModule, EpisodeModule, AudioBookModule, ProgressModule, DictionaryModule, HttpModule, MailerModule, HelpModule],
+  controllers: [AppController, UserController, AuthController, NotesController, AnalysisController, AnnouncementController, ChapterController, CommentController, MessageController, CategoryController, NotifyController, HashtagController, LibraryController, ReadingListController, BookCaseController, FollowingController, BookController, EpisodeController, AudioBookController, ProgressController, DictionaryController, MailerController, HelpController],
+  providers: [AppService, UserService, PrivateNotesService, AnalysisService, AnnouncementService, ChapterService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService, LibraryService, ReadingListService, BookCaseService, FollowingService, BookService, EpisodeService, AudioBookService, ProgressService, DictionaryService, FileService, ModerationService, SpeechToTextService, MailerService, ConfigService, HelpService],
 })
 export class AppModule {}

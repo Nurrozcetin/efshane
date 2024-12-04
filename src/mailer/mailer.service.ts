@@ -74,10 +74,16 @@ export class MailerService {
 
     async sendContactMail(contactUsDto: ContactUsDto) {
         const { email, title, description } = contactUsDto;
-        await this.sendMail(
-            "efshaneapp@gmail.com",
-            `Bize Ulaşın - ${title}`,
-            `${description}`
-        );
+        const mailOptions = {
+            from: email,
+            to: `efshaneapp@gmail.com`,
+            subject: `Bize Ulaşın - ${title}`,
+            text: description
+        }
+        try {
+            const info = await this.transporter.sendMail(mailOptions);
+        } catch (error) {
+            throw new Error('Dinamik e-posta gönderimi başarısız.');
+        }
     }
 }

@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsString } from "class-validator";
+import {IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateEpisodeDto {
     id: string;
@@ -7,13 +7,25 @@ export class CreateEpisodeDto {
     @IsString()
     title: string;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
-    audioFile: string;
+    audioFile?: string;
 
-    @IsNotEmpty()
+    @IsOptional()
+    @IsString()
+    textFile?: string;
+
+    @IsOptional()
+    @IsString()
+    duration?: string;
+    
+    @IsOptional()
+    @IsString()
+    image?: string;
+
+    @IsOptional()
     @IsInt()
-    duration: number;
+    audiobookId: number;
 
     publish: boolean;
 

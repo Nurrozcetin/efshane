@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsInt, IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsArray, IsBoolean, IsNotEmpty, IsString } from "class-validator";
 
 export class CreateBookDto {
     id: string;
@@ -6,6 +6,10 @@ export class CreateBookDto {
     @IsNotEmpty()
     @IsString()
     title: string;
+
+    @IsNotEmpty()
+    @IsString()
+    normalizedTitle: string;
 
     @IsNotEmpty()
     @IsString()

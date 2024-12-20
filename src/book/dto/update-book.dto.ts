@@ -9,6 +9,10 @@ export class UpdateBookDto {
 
     @IsOptional()
     @IsString()
+    normalizedTitle?: string;
+
+    @IsOptional()
+    @IsString()
     summary?: string;
 
     @IsOptional()

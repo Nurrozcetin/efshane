@@ -1,19 +1,44 @@
-import {IsOptional, IsString } from "class-validator";
+import {IsArray, IsBoolean, IsOptional, IsString } from "class-validator";
 
 export class UpdateAudioBookDto {
     id: string;
 
     @IsOptional()
     @IsString()
-    title: string;
+    title?: string;
 
     @IsOptional()
     @IsString()
-    duration: string;
+    normalizedTitle?: string;
 
     @IsOptional()
-    bookCover: string;
+    @IsString()
+    summary?: string;
 
-    publish_date: Date = new Date();
+    @IsOptional()
+    bookCover?: string;
+
+    @IsOptional()
+    publish_date?: Date = new Date();
+
+    @IsOptional()
+    @IsBoolean()
+    publish?: boolean
+    
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    hashtags?: string[];
+    
+    @IsOptional()
+    @IsString()
+    categories?: string; 
+
+    @IsOptional()
+    @IsString()
+    ageRange?: string;
+
+    @IsOptional()
+    @IsString()
+    bookCopyright?: string;
 }
-

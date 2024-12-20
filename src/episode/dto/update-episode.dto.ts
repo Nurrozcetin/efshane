@@ -1,19 +1,29 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsInt, IsOptional, IsString } from "class-validator";
 
 export class UpdateEpisodeDto {
     id: string;
 
     @IsOptional()
     @IsString()
-    title: string;
+    title?: string;
 
     @IsOptional()
     @IsString()
-    audioFile: string;
+    audioFile?: string;
 
     @IsOptional()
-    @IsInt()
-    duration: number;
+    @IsString()
+    textFile?: string;
+
+    @IsOptional()
+    @IsString()
+    duration?: string
+
+    @IsOptional()
+    @IsString()
+    image?: string;
+
+    publish: boolean;
 
     publish_date: Date = new Date();
 

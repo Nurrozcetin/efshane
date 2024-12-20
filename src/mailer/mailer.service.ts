@@ -37,7 +37,7 @@ export class MailerService {
     async generateVerificationCode(email: string) {
         const code = Math.floor(10000 + Math.random() * 90000).toString();
         const expiresAt = new Date(new Date().getTime() + 2 * 60 * 1000);
-        this.verificationCodes.set(email, { code, expiresAt }); // E-posta ile kodu sakla
+        this.verificationCodes.set(email, { code, expiresAt }); 
         return { code, expiresAt };
     }
 

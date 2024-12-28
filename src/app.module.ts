@@ -1,3 +1,4 @@
+import { FeedController } from './feed/feed.controller';
 import { EncryptionService } from './message/encryption.service';
 import { BookService } from './book/book.service';
 import { LibraryModule } from './library/library.module';
@@ -63,7 +64,9 @@ import { HelpService } from './help/help.service';
 import { HelpController } from './help/help.controller';
 import { HelpModule } from './help/help.module';
 import {MemoryStoredFile, NestjsFormDataModule } from 'nestjs-form-data';
-
+import { HashtagModule } from './hashtag/hashtag.module';
+import { FeedModule } from './feed/feed.module';
+import { FeedService } from './feed/feed.service';
 
 @Module({
   imports: [
@@ -71,8 +74,8 @@ import {MemoryStoredFile, NestjsFormDataModule } from 'nestjs-form-data';
       rootPath: join(__dirname, '..', '/efshane_front/Efshane/public'),
       serveRoot: '/public/', 
     }),
-    PrismaModule, UsersModule, AuthModule, AnalysisModule, AnnouncementModule, ChapterModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, LibraryModule, ReadingListModule, BookCaseModule, FollowingModule, BookModule, EpisodeModule, AudioBookModule, HttpModule, MailerModule, HelpModule, NestjsFormDataModule],
-  controllers: [AppController, UserController, AuthController, AnalysisController, AnnouncementController, ChapterController, CommentController, MessageController, CategoryController, NotifyController, HashtagController, LibraryController, ReadingListController, BookCaseController, FollowingController, BookController, EpisodeController, AudioBookController, MailerController, HelpController],
-  providers: [AppService, UserService, AnalysisService, AnnouncementService, ChapterService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService, LibraryService, ReadingListService, BookCaseService, FollowingService, BookService, EpisodeService, AudioBookService, MailerService, ConfigService, HelpService],
+    PrismaModule, UsersModule, AuthModule, AnalysisModule, AnnouncementModule, ChapterModule, HashtagModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, LibraryModule, ReadingListModule, BookCaseModule, FollowingModule, BookModule, EpisodeModule, AudioBookModule, HttpModule, MailerModule, HelpModule, NestjsFormDataModule, FeedModule],
+  controllers: [AppController, UserController, AuthController, AnalysisController, AnnouncementController, ChapterController, CommentController, MessageController, CategoryController, NotifyController, HashtagController, LibraryController, ReadingListController, BookCaseController, FollowingController, BookController, EpisodeController, AudioBookController, MailerController, HelpController, FeedController],
+  providers: [AppService, UserService, AnalysisService, AnnouncementService, ChapterService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService, LibraryService, ReadingListService, BookCaseService, FollowingService, BookService, EpisodeService, AudioBookService, MailerService, ConfigService, HelpService, FeedService],
 })
 export class AppModule {}

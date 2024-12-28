@@ -34,6 +34,8 @@ model User {
   category          UserCategory[]
   visible           MessageVisibility[]
   post              Post[]
+  like              Like[]
+  repost             Repost[]
 }
 
 model Book {
@@ -62,13 +64,16 @@ model Book {
 
 model Post {
   id                Int             @default(autoincrement()) @id
+  originalPostId    Int?
   userId            Int
   user              User            @relation(fields: [userId], references: [id])
   content           String
-  image             String
+  image             String?
   createdAt         DateTime        @default(now()) 
   analysis          Analysis[]
   comments          Comments[]
+  like              Like[]
+  repost             Repost[]
 }
 model Announcement {
   id          Int     @default(autoincrement()) @id
@@ -96,23 +101,42 @@ model Chapter {
 }
 
 model Analysis {
-  id                Int       @default(autoincrement()) @id
-  like_count        Int
-  comment_count     Int
-  read_count        Int
+  id                Int           @default(autoincrement()) @id
+  like_count        Int?          @default(0)
+  comment_count     Int?          @default(0)
+  read_count        Int?          @default(0)
   repost_count      Int?
   chapterId         Int?
-  chapter           Chapter?  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  chapter           Chapter?      @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   bookId            Int?
-  book              Book?     @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  postId            Int?
-  post              Post?     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  book              Book?         @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  postId            Int?          
+  post              Post?         @relation(fields: [postId], references: [id], onDelete: Cascade)
   audioBookId       Int?
-  audioBook         AudioBook?     @relation(fields: [audioBookId], references: [id], onDelete: Cascade)
+  audioBook         AudioBook?    @relation(fields: [audioBookId], references: [id], onDelete: Cascade)
   episodeId         Int?
   episode           Episodes?     @relation(fields: [episodeId], references: [id], onDelete:Cascade)
+  commentId         Int?                      
+  comment           Comments?     @relation(fields: [commentId], references: [id], onDelete: Cascade)
 }
 
+model Repost {
+  id          Int     @id @default(autoincrement())
+  userId      Int
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId      Int?
+  post        Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model Like {
+  id          Int     @id @default(autoincrement())
+  userId      Int
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId      Int?
+  post        Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId   Int?
+  comment     Comments? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+}
 model Comments {
   id                Int         @default(autoincrement()) @id
   content           String
@@ -129,6 +153,11 @@ model Comments {
   user              User        @relation(fields: [userId], references: [id])
   postId            Int?        
   post              Post?       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  like              Like[]
+  parentCommentId   Int?        
+  parentComment     Comments?   @relation("ParentComment", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies           Comments[]  @relation("ParentComment") 
+  analysis          Analysis[]
 }
 
 model Following {

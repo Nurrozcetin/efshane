@@ -6,19 +6,23 @@ export class CreateCommentDto {
 
     @IsOptional()
     @IsInt()
-    bookId: number;
+    bookId?: number;
 
     @IsOptional()
     @IsInt()
-    chapterId: number;
+    postId?: number;
 
     @IsOptional()
     @IsInt()
-    audioBookId: number;
+    chapterId?: number;
 
     @IsOptional()
     @IsInt()
-    episodeId: number;
+    audioBookId?: number;
+
+    @IsOptional()
+    @IsInt()
+    episodeId?: number;
 
     @IsOptional()
     publish_date: Date = new Date();

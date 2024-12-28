@@ -444,6 +444,7 @@ export class AudioBookService{
                 comment_count: analysis.comment_count,
                 read_count: analysis.read_count,
                 repost_count: null,
+                postId: null,
             }))
         })
 

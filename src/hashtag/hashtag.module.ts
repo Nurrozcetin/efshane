@@ -6,4 +6,4 @@ Module({
     providers: [HashtagService, PrismaService],
     exports: [HashtagService],
 })
-export class CategoryModule {}
+export class HashtagModule {}

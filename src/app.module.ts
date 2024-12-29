@@ -15,7 +15,7 @@ import { AnalysisService } from './analysis/analysis.service';
 import { AnalysisModule } from './analysis/analysis.module';
 import { AnalysisController } from './analysis/analysis.controller';
 import { AnnouncementModule } from './announcement/anons.module';
-import { AnnouncementController } from './announcement/annons.controller';
+import { AnnouncementController } from './announcement/anons.controller';
 import { AnnouncementService } from './announcement/anons.service';
 import { ChapterModule } from './chapter/chapter.module';
 import { ChapterController } from './chapter/chapter.controller';
@@ -67,6 +67,7 @@ import {MemoryStoredFile, NestjsFormDataModule } from 'nestjs-form-data';
 import { HashtagModule } from './hashtag/hashtag.module';
 import { FeedModule } from './feed/feed.module';
 import { FeedService } from './feed/feed.service';
+import { NotificationsGateway } from './notification/notification.gateway';
 
 @Module({
   imports: [
@@ -74,8 +75,8 @@ import { FeedService } from './feed/feed.service';
       rootPath: join(__dirname, '..', '/efshane_front/Efshane/public'),
       serveRoot: '/public/', 
     }),
-    PrismaModule, UsersModule, AuthModule, AnalysisModule, AnnouncementModule, ChapterModule, HashtagModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, LibraryModule, ReadingListModule, BookCaseModule, FollowingModule, BookModule, EpisodeModule, AudioBookModule, HttpModule, MailerModule, HelpModule, NestjsFormDataModule, FeedModule],
+    PrismaModule, UsersModule, AuthModule, AnalysisModule, AnnouncementModule, ChapterModule, HashtagModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, LibraryModule, ReadingListModule, BookCaseModule, FollowingModule, BookModule, EpisodeModule, AudioBookModule, HttpModule, MailerModule, HelpModule, NestjsFormDataModule, FeedModule, NotificationsGateway],
   controllers: [AppController, UserController, AuthController, AnalysisController, AnnouncementController, ChapterController, CommentController, MessageController, CategoryController, NotifyController, HashtagController, LibraryController, ReadingListController, BookCaseController, FollowingController, BookController, EpisodeController, AudioBookController, MailerController, HelpController, FeedController],
-  providers: [AppService, UserService, AnalysisService, AnnouncementService, ChapterService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService, LibraryService, ReadingListService, BookCaseService, FollowingService, BookService, EpisodeService, AudioBookService, MailerService, ConfigService, HelpService, FeedService],
+  providers: [AppService, UserService, AnalysisService, AnnouncementService, ChapterService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, HashtagService, LibraryService, ReadingListService, BookCaseService, FollowingService, BookService, EpisodeService, AudioBookService, MailerService, ConfigService, HelpService, FeedService, NotificationsGateway],
 })
 export class AppModule {}

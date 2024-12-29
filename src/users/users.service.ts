@@ -6,6 +6,7 @@ import { PrismaService } from "prisma/prisma.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UserDto } from "./dto/user.dto";
 import { MailerService } from 'src/mailer/mailer.service';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -20,14 +21,16 @@ export class UserService {
   }
 
   async createUser(createUserDto:CreateUserDto): Promise<User> {
-    const { email, username, password, birthdate} = createUserDto;
+    const { email, username, password, birthdate, date, name} = createUserDto;
     const birthDateObj = new Date(birthdate);
     const user = await this.prisma.user.create({
       data: {
         email,
         username,
+        name,
         password,
-        birthdate: birthDateObj
+        birthdate: birthDateObj,
+        date: date
       },
     });
     await this.mailerService.sendMail(
@@ -67,45 +70,94 @@ export class UserService {
     }
 
     return user;
-}
-
-async updatePassword(updatePasswordDto: UpdatePasswordDto) {
-  const {email, pass} = updatePasswordDto;
-  const user = await this.getUserByEmail(email);
-  const hashedPass = await this.passwordService.hashPassword(pass);
-  
-  await this.prisma.user.update({
-    where: { email: user.email},
-    data: { password: hashedPass },
-  });
-  return { message: 'Updated password' };
-}
-
-  async deleteUserById(id:number){
-    return this.prisma.user.delete({
-      where: {id},
-    });
   }
 
-  async updateUserById(userDto:UserDto, id:number): Promise<User> {
-    const { email, username, password, age, profile_image, image_background, about, birthdate
-    } = userDto;
+  async getMyProfile(userId: number) {
+    const baseUrl = 'http://localhost:5173'; 
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        username: true,
+        name: true,
+        profile_image: true,
+        about: true,
+        date: true,
+        image_background: true,
+        _count: {
+          select: {
+            followers: true, 
+            following: true, 
+          },
+        },
+      },
+    });
+  
+    const formattedUser = {
+      ...user,
+      image_background: `${baseUrl}/${user.image_background}`,
+      profile_image: `${baseUrl}/${user.profile_image}`,
+      followersCount: user?._count?.followers || 0,
+      followingCount: user?._count?.following || 0,
+    };
+  
+    return formattedUser;
+  }
+
+  async updatePassword(updatePasswordDto: UpdatePasswordDto) {
+    const {email, pass} = updatePasswordDto;
+    const user = await this.getUserByEmail(email);
+    const hashedPass = await this.passwordService.hashPassword(pass);
+    
+    await this.prisma.user.update({
+      where: { email: user.email},
+      data: { password: hashedPass },
+    });
+    return { message: 'Updated password' };
+  }
+
+  async updateUserById(updateUserDto:UpdateUserDto, userId:number){
+    const {name, profile_image, image_background, about } = updateUserDto;
     const user = await this.prisma.user.update({
-      where: {id},
+      where: {id: userId},
       data: {
-        email,
-        username,
-        password,
+        name,
         profile_image,
-        age,
         image_background,
         about,
-        birthdate
       },
     });
     if(!user){
       throw new NotFoundException();
     }
     return user;
+  }
+
+  async getProfileByUsername(username: string) {
+    const baseUrl = 'http://localhost:5173'; 
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      select: {
+        username: true,
+        name: true,
+        profile_image: true,
+        about: true,
+        date: true,
+        image_background: true,
+        _count: {
+          select: {
+            followers: true, 
+            following: true, 
+          },
+        },
+      },
+    });
+    const formattedUser = {
+      ...user,
+      image_background: `${baseUrl}/${user.image_background}`,
+      profile_image: `${baseUrl}/${user.profile_image}`,
+      followersCount: user?._count?.followers || 0,
+      followingCount: user?._count?.following || 0,
+    };
+    return formattedUser;
   }
 }

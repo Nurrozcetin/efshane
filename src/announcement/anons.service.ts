@@ -1,78 +1,89 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { PrismaService } from "prisma/prisma.service";
-import { CreateAnnouncementDto } from "./dto/create-anons.dto";
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'prisma/prisma.service';
+import { CreateAnnouncementDto } from './dto/create-anons.dto';
+import { NotificationsGateway } from 'src/notification/notification.gateway';
 
 @Injectable()
-    export class AnnouncementService {
-        constructor(
-            private readonly prisma: PrismaService
-    ){}
+export class AnnouncementService {
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly notificationsGateway: NotificationsGateway,
+    ) {}
 
-    async createAnnouncement(
-        createAnnouncementDto: CreateAnnouncementDto,
-        authorId: number,
-    ) {
-        const { title, content} = createAnnouncementDto;
-        const annons = await this.prisma.announcement.create({
-        data: {
-            title,
-            content,
-            authorId,
-            date: new Date(),
-        },
-        });
-        return annons;
-    }
+    async createAnnouncement(createAnnouncementDto: CreateAnnouncementDto, authorId: number) {
+        const {content } = createAnnouncementDto;
 
-    async getAllNAnnonsByAuthorId(authorId){
-        const annons = await this.prisma.announcement.findMany({
-            where:{
-                authorId: parseInt(authorId, 10)
-            },
-        });
-
-        if (!annons || (annons).length === 0) {
-            throw new NotFoundException(`No annons found for bookId ${authorId}`);
-        }
-        return annons;
-    }
-
-    async deleteAllAnnonsByAuthorId(authorId: string, annonsId: string){
-        const annons = await this.prisma.announcement.deleteMany({
-            where: {
-                id: parseInt(annonsId, 10),
-                authorId: parseInt(authorId, 10),
-            },
-        });
-        return annons;
-    }
-
-    async updateAllAnnonsByAuthorId(authorId: string, annonsId: string, updateData: any){
-        const annons = await this.prisma.announcement.updateMany({
-            where: {
-                id: parseInt(annonsId, 10),
-                authorId: parseInt(authorId, 10),
-            },
-            data: updateData,
-        });
-        return annons;
-    }
-
-    @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-    async softDeleteExpiredAnnouncements() {
-        const result = await this.prisma.announcement.updateMany({
-            where: {
-                date: {
-                    lt: new Date(Date.now() - 24 * 60 * 60 * 1000), 
-                },
-                deletedAt: null,
-            },
+        const announcement = await this.prisma.announcement.create({
             data: {
-                deletedAt: new Date(),
+                content,
+                authorId,
             },
         });
-        console.log(`Update result: ${result.count} records updated.`);
-        return result;
+
+        const followers = await this.prisma.following.findMany({
+            where: { followingId: authorId },
+            select: { followersId: true },
+        });
+
+        for (const follower of followers) {
+            const createdNotification = await this.prisma.notification.create({
+                data: {
+                    userId: follower.followersId,
+                    message: `Yeni duyuru: ${content}`,
+                },
+            });
+            
+            this.notificationsGateway.sendNotificationToUser(follower.followersId, {
+                id: createdNotification.id,
+                message: createdNotification.message,
+                createdAt: createdNotification.createdAt,
+            });
+        }
+        return announcement;
+    }
+
+    async getAllNAnnonsByAuthorId(authorId: number){
+        const anons = await this.prisma.announcement.findMany({
+            where:{
+                authorId,
+            },
+        });
+
+        if (!anons || (anons).length === 0) {
+            throw new NotFoundException(`No anons found for user ${authorId}`);
+        }
+        return anons;
+    }
+
+    async deleteAllAnnonsByAuthorId(authorId: number, anonsId: string){
+        const anonsID = parseInt(anonsId, 10);
+        const anons = await this.prisma.announcement.deleteMany({
+            where: {
+                id: anonsID,
+                authorId,
+            },
+        });
+        return anons;
+    }
+
+    async getAnonsByAuthorUsername(username: string) {
+        const anons = await this.prisma.announcement.findMany({
+            where: {
+                author: {
+                    username: username,
+                },
+            },
+            select: {
+                id: true,
+                content: true,
+                date: true,
+                author: {
+                    select: {
+                        username: true,
+                    },
+                },
+            },
+        });
+        return anons;
     }
 }

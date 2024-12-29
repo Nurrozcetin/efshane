@@ -129,7 +129,6 @@ export class BookService{
             };
             
             const decodedNormalizedTitle = normalizeTitle(decodedTitle);
-            //console.log("Normalized Title:", decodedNormalizedTitle);
 
             if (!decodedTitle) {
                 throw new BadRequestException("Title parameter is required.");
@@ -446,22 +445,6 @@ export class BookService{
         return books;
     }
 
-    async getAllBookByAuthor(authorId: string) {
-        const books = await this.prisma.book.findMany({
-            where: {
-                userId: parseInt(authorId, 10), 
-            },
-            include: {
-                chapter: true,
-            }
-        });
-    
-        if (!books || books.length === 0) {
-            throw new NotFoundException(`No books found for authorId ${authorId}`);
-        }
-        return books;
-    }
-
     async getAgeRange() {
         try {
             const ageRange = await this.prisma.range.findMany({
@@ -493,6 +476,7 @@ export class BookService{
     }
 
     async getBooksByAuthorId(authorId: number) {
+        const baseUrl = 'http://localhost:5173'; 
         const books = await this.prisma.book.findMany({
             where: {
                 userId: authorId,
@@ -513,7 +497,12 @@ export class BookService{
                 },
             },
         });
-        return books;
+
+        const formattedBooks = books.map((book) => ({
+            ...book,
+            bookCover: `${baseUrl}/${book.bookCover}`,
+        }));
+        return formattedBooks;
     }
 
     async togglePublish(
@@ -569,4 +558,40 @@ export class BookService{
     
         return updatedBook;
     }  
+
+    async getBookByAuthorUsername(username: string) {
+        const baseUrl = 'http://localhost:5173'; 
+        const books = await this.prisma.book.findMany({
+            where: {
+                user: {
+                    username: username,
+                },
+            },
+            select: {
+                id: true,
+                title: true,
+                bookCover: true,
+                publish_date: true,
+                publish: true,
+                isAudioBook: true,
+                analysis: {
+                    select: {
+                        read_count: true,
+                        comment_count: true,
+                        like_count: true,
+                    },
+                },
+                user: {
+                    select: {
+                        username: true,
+                    }
+                }
+            },
+        });  
+        const formattedBooks = books.map((book) => ({
+            ...book,
+            bookCover: `${baseUrl}/${book.bookCover}`,
+        }));
+        return formattedBooks;
+    }
 }

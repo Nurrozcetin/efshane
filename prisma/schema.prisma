@@ -10,9 +10,11 @@ generator client {
 model User {
   id                Int       @default(autoincrement()) @id
   email             String    @unique
+  name              String?
   username          String    @unique
   password          String
   birthdate         DateTime  
+  date              DateTime  @default(now())
   profile_image     String?
   age               Int?
   image_background  String?
@@ -77,7 +79,6 @@ model Post {
 }
 model Announcement {
   id          Int     @default(autoincrement()) @id
-  title       String
   content     String
   date        DateTime @default(now()) 
   deletedAt   DateTime?

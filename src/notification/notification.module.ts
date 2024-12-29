@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
 import { PrismaService } from "prisma/prisma.service";
 import { NotifyService } from "./notification.service";
-import { CreateNotificationDto } from "./dto/create-notification.dto";
+import { NotificationsGateway } from "./notification.gateway";
 
 Module({
-    providers: [NotifyService, PrismaService],
-    exports: [NotifyService],
+    providers: [NotifyService, PrismaService, NotificationsGateway],
+    exports: [NotifyService, NotificationsGateway],
 })
 export class NotifyModule {}

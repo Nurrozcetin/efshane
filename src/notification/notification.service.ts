@@ -1,8 +1,5 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "prisma/prisma.service";
-import { CreateNotificationDto } from "./dto/create-notification.dto";
-import { GetNotificationsDto } from "./dto/get-notification.dto";
-import { UpdateNotificationDto } from "./dto/update-notification.dto";
 
 @Injectable()
 export class NotifyService{
@@ -10,37 +7,30 @@ export class NotifyService{
         private readonly prisma: PrismaService
     ) {}
 
-    async createNotification(createNotificationDto: CreateNotificationDto) {
-        const { userId, message } = createNotificationDto;
-        return this.prisma.notification.create({
-            data: {
-                userId,
-                message,
-                isRead: false,
-                createdAt: new Date(),
-            },
-        });
-    }
-
-    async getNotification(getNotificationsDto: GetNotificationsDto){
-        const { userId } = getNotificationsDto;
-
+    async getNotification(userId: string){
         return this.prisma.notification.findMany({
             where: {
-                userId,
-                isRead: false
+                userId: parseInt(userId),
             },
             orderBy: {
                 createdAt: 'desc'
             },
+            include: {
+                user: {
+                    select: {
+                        username: true,
+                        profile_image: true,
+                    }
+                }
+            }
         });
     }
 
-    async markAsRead( notifyId: number, updateNotificationDto: UpdateNotificationDto) {
-        const {isRead} = updateNotificationDto;
-        return this.prisma.notification.update({
-            where: {id: notifyId},
-            data:{isRead},
+    async deleteNotification(notifyId: string) {
+        return this.prisma.notification.delete({
+            where: {
+                id: parseInt(notifyId),
+            },
         });
     }
 }

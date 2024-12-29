@@ -1,33 +1,27 @@
-import { Body, Controller, Get, Param, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common";
 import { NotifyService } from "./notification.service";
-import { CreateNotificationDto } from "./dto/create-notification.dto";
-import { GetNotificationsDto } from "./dto/get-notification.dto";
-import { UpdateNotificationDto } from "./dto/update-notification.dto";
+import { JwtAuthGuard } from "src/auth/guards/jwt.guards";
 
 @Controller('notify')
 export class NotifyController{
     constructor(
         private readonly notifyService: NotifyService,
     ){}
-
-    @Post()
-    async createNotification(@Body() createNotificationDto: CreateNotificationDto) {
-        return this.notifyService.createNotification(createNotificationDto);
-    }
     
-    @Get('user/:userId')
+    @UseGuards(JwtAuthGuard)
+    @Get()
     async getNotification(
-        @Param('userId') userId: string
+        @Req() req
     ) {
-        const getNotificationsDto: GetNotificationsDto = { userId: parseInt(userId, 10) };
-        return this.notifyService.getNotification(getNotificationsDto);
+        const userId = req.user.id;
+        return this.notifyService.getNotification(userId);
     }
 
-    @Patch(':notificationId')
-    async markAsRead(
-        @Param('notificationId') notificationId: string,
-        @Body() updateNotificationDto: UpdateNotificationDto) {
-            const notifyId = parseInt(notificationId, 10); 
-            return this.notifyService.markAsRead(notifyId, updateNotificationDto);
+    @Delete(':notifyId')
+    async deleteNotification(
+        @Param('notifyId') notifyId: string,
+    ) {
+        console.log(notifyId);
+        return this.notifyService.deleteNotification(notifyId);
     }
 }

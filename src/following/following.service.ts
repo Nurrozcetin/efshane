@@ -7,42 +7,73 @@ export class FollowingService{
         private readonly prisma: PrismaService
     ){}
 
-    async followUser(
-        followerId: number,
-        followingId: number
-    ) {
-        if (followerId === followingId) {
-            throw new Error('Users cannot follow themselves.');
-        }
-
+    async followUser(followerId: string, username: string) {
         try {
+            const followingId = await this.prisma.user.findUnique({
+                where: {
+                    username: username,
+                },
+            });
+    
+            if (!followingId) {
+                throw new Error('User not found');
+            }
+    
             return await this.prisma.following.create({
                 data: {
-                    followersId: followerId,
-                    followingId: followingId,
+                    followersId: followingId.id, 
+                    followingId: parseInt(followerId, 10),
                 },
             });
         } catch (error) {
-            throw new Error('Could not follow user')
+            throw new Error('Could not follow user');
         }
     }
+    
 
-    async unfollowUser(followerId: number, followingId: number) {
-        const  following = await this.prisma.following.findFirst({
-            where:{
-                followersId: followerId,
-                followingId: followingId,
-            },
-        });
-
-        if(!following) {
-            throw new NotFoundException('Following relationship does not exist.');
+    async unfollowUser(followerId: string, username: string) {
+        try {
+            const followingId = await this.prisma.user.findUnique({
+                where: {
+                    username: username,
+                },
+            });
+    
+            if (!followingId) {
+                throw new Error('User not found');
+            }
+    
+            await this.prisma.following.delete({
+                where: {
+                    followersId_followingId: {
+                        followersId:  followingId.id, 
+                        followingId: parseInt(followerId, 10),
+                    },
+                },
+            });
+    
+            return { success: true, message: 'Successfully unfollowed user' };
+        } catch (error) {
+            throw new Error('Could not unfollow user');
         }
-        return await this.prisma.following.delete({
-            where:{
-                id: following.id
+    }
+    
+
+    async isFollowing(username: string, followerId: string) {
+        const userId = await this.prisma.user.findUnique({
+            where: {
+                username: username,
             },
         });
+        const following = await this.prisma.following.findUnique({
+            where: {
+                followersId_followingId: {
+                    followersId: parseInt(followerId, 10),
+                    followingId: userId.id
+                }
+            },
+        });
+        return !!following;
     }
 
     async getFollowingRecord( userId: number){

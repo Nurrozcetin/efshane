@@ -5,12 +5,7 @@ export class CreateAnnouncementDto {
 
     @IsNotEmpty()
     @IsString()
-    title: string;
     content: string;
-
-    @IsNotEmpty()
-    @IsInt()
-    authorId: number;
 
     @IsOptional()
     date: Date = new Date();

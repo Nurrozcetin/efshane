@@ -11,6 +11,8 @@ export class CreateUserDto{
     @IsNotEmpty({ message: 'Username can not empty!' })
     username: string; 
 
+    name: string = "User";
+
     @IsNotEmpty({ message: 'Password can not empty!' })
     @Matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/, {
       message: 'Password must contain at least one uppercase letter, one number, and one special character.'
@@ -20,4 +22,7 @@ export class CreateUserDto{
     @IsDate()
     @Transform(({ value }) => new Date(value))
     birthdate: Date;
+
+    @IsDate()
+    date: Date = new Date();
 }

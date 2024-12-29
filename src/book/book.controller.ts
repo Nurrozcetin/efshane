@@ -58,15 +58,6 @@ export class  BookController {
         return this.bookService.getCopyRight();
     }
 
-    @UseGuards(JwtAuthGuard)
-    @Get('all')
-    async getAllBookByAuthor(
-        @Req() req
-    ) {
-        const authorID = req.user.id;
-        return this.bookService.getAllBookByAuthor(String(authorID));
-    }
-
     @Get()
     async getAllBook() {
         return this.bookService.getAllBook();
@@ -110,15 +101,9 @@ export class  BookController {
         return this.bookService.getBookByTitle(decodedTitle, userId);
     }
 
-    // @UseGuards(JwtAuthGuard)
-    // @Put(':bookId')
-    // async toggleBook(
-    //     @Param('bookId') bookId: string, 
-    //     @Body() bookDto: UpdateBookDto,
-    //     @Req() req
-    //     ) {
-    //         const authorId = req.user.id;
-    //         const book = await this.bookService.toggleBook(bookId);
-    //         return book;
-    //     }
+    @Get('profile/other/:username')
+    async getBookByAuthorUsername(
+        @Param('username') username: string) {
+        return this.bookService.getBookByAuthorUsername(username);
+    }
 }

@@ -9,25 +9,33 @@ export class FollowingController{
     ){}
 
     @UseGuards(JwtAuthGuard)
-    @Post('follow/:followingId')
+    @Post('follow/:username')
     async followUser(
-        @Param('followingId') followingId: string,
+        @Param('username') username: string,
         @Req() req
     ) {
         const followerID = req.user.id; 
-        const followingID = parseInt(followingId, 10);
-        return await this.followingService.followUser(followerID, followingID);
+        return await this.followingService.followUser(followerID, username);
     }
 
     @UseGuards(JwtAuthGuard)
-    @Post('unfollow/:followingId')
+    @Post('unfollow/:username')
     async unfollowUser(
-        @Param('followingId') followingId: string,
+        @Param('username') username: string,
         @Req() req
     ) {
-        const followerID = req.user.id; 
-        const followingID = parseInt(followingId, 10);
-        return await this.followingService.unfollowUser(followerID, followingID);
+        const followerId = req.user.id; 
+        return await this.followingService.unfollowUser(followerId, username);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('is-following/:username')
+    async isFollowing(
+        @Param('username') username: string,
+        @Req() req
+    ) {
+        const followerId = req.user.id;
+        return await this.followingService.isFollowing(username, followerId);
     }
 
     @UseGuards(JwtAuthGuard)

@@ -10,22 +10,26 @@ export class ReadingListController {
     @Post('add/:bookId')
     async addBookToreadingList(
     @Param('bookId') bookId: string,
-    @Body() body: { isAudioBook: boolean }, 
     @Req() req 
     ) {
         const userId = req.user.id; 
-        const { isAudioBook } = body;
-
-        return this.readingListService.addBookToreadingList(bookId, userId, isAudioBook);
+        return this.readingListService.addBookToReadingList(bookId, userId);
     }
 
     @UseGuards(JwtAuthGuard)
     @Get()
-    async showLReadingList(
+    async showReadingList(
         @Req() req
     ) {
         const userID = req.user.id;
-        return this.readingListService.showLReadingList(userID);
+        return this.readingListService.showReadingList(userID);
+    }
+
+    @Get('user/:username')
+    async showUserReadingList(
+        @Param('username') username: string,
+    ) {
+        return this.readingListService.showUserReadingList(username);
     }
 
     @UseGuards(JwtAuthGuard)

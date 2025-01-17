@@ -29,7 +29,6 @@ export class AuthController {
       }
       const {accessToken} = await this.authService.login(req.user);
       return { accessToken };
-      //return this.authService.login(req.user);
   }
 
   @Post('/logout') 

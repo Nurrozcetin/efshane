@@ -25,4 +25,5 @@ export class CreateUserDto{
 
     @IsDate()
     date: Date = new Date();
+    profile_image: string = 'uploads/default-profile.jpg';
 }

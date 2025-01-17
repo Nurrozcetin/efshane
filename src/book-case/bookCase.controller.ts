@@ -7,38 +7,34 @@ export class BookCaseController {
     constructor(private readonly bookCaseService: BookCaseService) {}
 
     @UseGuards(JwtAuthGuard)
-    @Post('add/:bookId')
-    async addBookToBookCase(
-    @Param('bookId') bookId: string,
-    @Body() body: { isAudioBook: boolean }, 
-    @Req() req 
+    @Post('book/:bookTitle')
+    async addBookBookCase(
+        @Param('bookTitle') bookTitle: string,
+        @Req() req 
     ) {
         const userId = req.user.id; 
-        const { isAudioBook } = body;
-
-        return this.bookCaseService.addBookToBookCase(bookId, userId, isAudioBook);
+        const decodedBookTitle = decodeURIComponent(bookTitle);
+        return this.bookCaseService.addBookBookCase(decodedBookTitle, userId);
     }
 
     @UseGuards(JwtAuthGuard)
-    @Get()
-    async showBookCase(
-        @Req() req
+    @Post('audioBook/:audioBookTitle')
+    async addAudioBookBookCase(
+        @Param('audioBookTitle') audioBookTitle: string,
+        @Req() req 
     ) {
-        const userID = req.user.id;
-        return this.bookCaseService.showBookCase(userID);
+        const userId = req.user.id; 
+        const decodedAudioBookTitle = decodeURIComponent(audioBookTitle);
+        return this.bookCaseService.addAudioBookBookCase(decodedAudioBookTitle, userId);
     }
 
     @UseGuards(JwtAuthGuard)
-    @Delete('delete/:bookId')
-    async removeBookFromBookCase(
-        @Param('bookId') bookId: string,
-        @Body() body: { isAudioBook: boolean }, 
+    @Get('last')
+    async getLastReadBook(
         @Req() req
     ) {
-        const bookID = parseInt(bookId, 10)
-        const userID = req.user.id;
-        const { isAudioBook } = body;
-        return this.bookCaseService.removeBookFromBookCase(bookID, userID, isAudioBook );
-    }
-
+        const userId = req.user.id; 
+        const lastReadBook = await this.bookCaseService.getLastReadBook(userId);
+        return lastReadBook;
+    }    
 }

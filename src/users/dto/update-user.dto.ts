@@ -11,9 +11,9 @@ export class UpdateUserDto{
 
     @IsOptional()
     @IsString()
-    image_background: string; 
+    image_background?: string; 
 
     @IsOptional()
     @IsString()
-    profile_image: string; 
+    profile_image?: string; 
 }

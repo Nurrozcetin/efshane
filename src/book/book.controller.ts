@@ -1,8 +1,19 @@
 import { BookService } from './book.service';
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UseGuards } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
 import { JwtAuthGuard } from "src/auth/guards/jwt.guards";
 import { UpdateBookDto } from './dto/update-book.dto';
 import { CreateBookDto } from './dto/create-book.dto';
+import { diskStorage } from 'multer';
+import { FileInterceptor } from '@nestjs/platform-express'
+
+const storage = diskStorage({
+    destination: './uploads', 
+    filename: (req, file, callback) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const extension = file.originalname.split('.').pop(); 
+        callback(null, `${file.fieldname}-${uniqueSuffix}.${extension}`);
+    },
+});
 
 @Controller('book')
 export class  BookController {
@@ -38,12 +49,28 @@ export class  BookController {
 
     @UseGuards(JwtAuthGuard)
     @Post()
+    @UseInterceptors(
+        FileInterceptor('bookCover', {
+            storage,
+            fileFilter: (req, file, callback) => {
+                const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                if (allowedMimeTypes.includes(file.mimetype)) {
+                    callback(null, true);
+                } else {
+                    callback(new Error('Invalid file type'), false);
+                }
+            },
+        }),
+    )
     async createBook(
+        @UploadedFile() bookCover: Express.Multer.File,
         @Body() body: CreateBookDto,
         @Req() req
     ){
         const authorId = req.user.id;
-        return this.bookService.createBook(body, authorId);
+        const bookCoverPath = bookCover?.path;
+        const isAudioBook = body.isAudioBook === true;
+        return this.bookService.createBook({...body, isAudioBook, bookCover: bookCoverPath }, authorId);
     }
 
     @Get('ageRange')
@@ -105,5 +132,27 @@ export class  BookController {
     async getBookByAuthorUsername(
         @Param('username') username: string) {
         return this.bookService.getBookByAuthorUsername(username);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('details/bookDetails/:bookTitle')
+    async getBookDetailsByTitle(
+        @Param('bookTitle') bookTitle: string,  
+        @Req() req
+    ) {
+        const userId = req.user.id;
+        const decodedTitle = decodeURIComponent(bookTitle);
+        return this.bookService.getBookDetailsByTitle(decodedTitle, userId);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('like/:bookTitle')
+    async likeBook(
+        @Param('bookTitle') bookTitle: string, 
+        @Req() req
+    ) {
+        const userId = req.user.id; 
+        const decodedTitle = decodeURIComponent(bookTitle);
+        return this.bookService.toggleLikeBook(decodedTitle, userId);
     }
 }

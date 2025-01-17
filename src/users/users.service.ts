@@ -7,6 +7,7 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { UserDto } from "./dto/user.dto";
 import { MailerService } from 'src/mailer/mailer.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { profile } from 'console';
 
 @Injectable()
 export class UserService {
@@ -21,6 +22,7 @@ export class UserService {
   }
 
   async createUser(createUserDto:CreateUserDto): Promise<User> {
+    const defaultImage = "/images/user.jpeg";
     const { email, username, password, birthdate, date, name} = createUserDto;
     const birthDateObj = new Date(birthdate);
     const user = await this.prisma.user.create({
@@ -28,6 +30,7 @@ export class UserService {
         email,
         username,
         name,
+        profile_image: defaultImage,
         password,
         birthdate: birthDateObj,
         date: date
@@ -73,7 +76,7 @@ export class UserService {
   }
 
   async getMyProfile(userId: number) {
-    const baseUrl = 'http://localhost:5173'; 
+    //const baseUrl = 'http://localhost:5173'; 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -92,10 +95,13 @@ export class UserService {
       },
     });
   
+    const defaultProfileImage = '/images/user.jpeg';
     const formattedUser = {
       ...user,
-      image_background: `${baseUrl}/${user.image_background}`,
-      profile_image: `${baseUrl}/${user.profile_image}`,
+      //image_background: `${baseUrl}/${user.image_background}`,
+      //profile_image: `${baseUrl}/${user.profile_image}`,
+      image_background: user.image_background || '',
+      profile_image: user.profile_image || defaultProfileImage,
       followersCount: user?._count?.followers || 0,
       followingCount: user?._count?.following || 0,
     };

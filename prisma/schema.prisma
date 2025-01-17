@@ -27,9 +27,10 @@ model User {
   receiver          Messages[]  @relation("Receiver")
   sender            Messages[]  @relation("Sender")
   chapter           Chapter[]
-  library           Library[]
   bookCase          BookCase[]
   readingList       ReadingList[]
+  audioBookCase     AudioBookCase[]
+  listeningList     ListeningList[]
   comment           Comments[]
   notification      Notification[]
   episodes          Episodes[]
@@ -37,7 +38,7 @@ model User {
   visible           MessageVisibility[]
   post              Post[]
   like              Like[]
-  repost             Repost[]
+  repost            Repost[]
 }
 
 model Book {
@@ -48,7 +49,7 @@ model Book {
   chapter           Chapter[]
   analysis          Analysis[]
   publish_date      DateTime        @default(now())
-  bookCover         String
+  bookCover         String?
   comments          Comments[]
   publish           Boolean         @default(false)
   isAudioBook       Boolean      
@@ -59,9 +60,9 @@ model Book {
   bookCopyright     BookCopyright[]
   userId            Int
   user              User            @relation(fields: [userId], references: [id])
-  library           Library[]       @relation("LibraryBooks")
-  bookCase          BookCase[]      @relation("BookCaseBooks")
-  readingList       ReadingList[]   @relation("ReadingListBooks")
+  bookCase          BookCase[]      
+  readingList       ReadingList[]   
+  like              Like[]
 }
 
 model Post {
@@ -130,13 +131,17 @@ model Repost {
 }
 
 model Like {
-  id          Int     @id @default(autoincrement())
-  userId      Int
-  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  postId      Int?
-  post        Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  commentId   Int?
-  comment     Comments? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  id            Int           @id @default(autoincrement())
+  userId        Int
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId        Int?
+  post          Post?         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId     Int?
+  comment       Comments?     @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  bookId        Int?
+  book          Book?         @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  audioBookId   Int?
+  audioBook     AudioBook?    @relation(fields: [audioBookId], references: [id], onDelete: Cascade)
 }
 model Comments {
   id                Int         @default(autoincrement()) @id
@@ -210,11 +215,11 @@ model AudioBook {
   category          AudioBookCategory[]
   bookCopyright     AudioBookCopyright[]
   ageRange          AudioBookAgeRange[]
-  library           Library[]       @relation("LibraryAudioBooks")
-  bookcase          BookCase[]      @relation("BookCaseAudioBooks") 
-  readingList       ReadingList[]   @relation("ReadingListAudioBooks")
   analysis          Analysis[]
-  comments          Comments[]    
+  comments          Comments[]
+  listeningList     ListeningList[]
+  audioBookCase     AudioBookCase[]
+  like              Like[]
 }
 
 model Episodes {
@@ -344,27 +349,40 @@ model Notification {
   isRead      Boolean   @default(false)  
   createdAt   DateTime  @default(now())  
 }
-model Library {
+model BookCase { 
   id            Int          @id @default(autoincrement())
-  userId        Int          @unique
+  userId        Int          
+  bookId        Int                            
+  createdAt     DateTime     @default(now())           
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  books         Book[]       @relation("LibraryBooks") 
-  audioBooks    AudioBook[]  @relation("LibraryAudioBooks")
+  book          Book         @relation(fields: [bookId], references: [id])   
 }
 
-model BookCase { //kullanicinin okudugu/dinledigi ve okumaya/dinlemeye devam ettigi kitaplar
+model AudioBookCase { 
   id            Int          @id @default(autoincrement())
-  userId        Int          @unique
+  userId        Int          
+  audioBookId   Int                                  
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  books         Book[]       @relation("BookCaseBooks")   
-  audioBooks    AudioBook[]  @relation("BookCaseAudioBooks")
+  audioBooks    AudioBook    @relation(fields: [audioBookId], references: [id]) 
   createdAt     DateTime     @default(now())  
 }
 
 model ReadingList {
-  id            Int          @id @default(autoincrement())
-  userId        Int          @unique
-  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  books         Book[]       @relation("ReadingListBooks")   
-  audioBooks    AudioBook[]  @relation("ReadingListAudioBooks")
+  id        Int     @default(autoincrement()) @id 
+  name      String
+  userId    Int                                 
+  bookId    Int                                     
+  addedAt   DateTime @default(now())            
+  user      User    @relation(fields: [userId], references: [id]) 
+  book      Book    @relation(fields: [bookId], references: [id]) 
+}
+
+model ListeningList {
+  id        Int         @default(autoincrement()) @id 
+  name      String
+  userId    Int                                    
+  audioBookId Int                                  
+  addedAt   DateTime    @default(now())                
+  user      User        @relation(fields: [userId], references: [id])
+  audioBook AudioBook   @relation(fields: [audioBookId], references: [id]) 
 }

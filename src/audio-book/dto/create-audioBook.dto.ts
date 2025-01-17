@@ -1,3 +1,4 @@
+import { Transform } from "class-transformer";
 import { IsArray, IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateAudioBookDto {
@@ -27,7 +28,7 @@ export class CreateAudioBookDto {
     @IsString()
     duration: string;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     bookCover: string;
 
@@ -42,7 +43,21 @@ export class CreateAudioBookDto {
 
     @IsArray()
     @IsString({ each: true })
+    @Transform(({ value }) => {
+        if (typeof value === "string") {
+            try {
+                return JSON.parse(value);
+            } catch {
+                
+                throw new SyntaxError(`Invalid JSON for hashtags: ${value}`);
+            }
+        }
+        if (Array.isArray(value)) {
+            return value; 
+        }
+        return []; 
+    })
     hashtags?: string[];
-
+    
     publish_date: Date = new Date();
 }

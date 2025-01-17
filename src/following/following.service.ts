@@ -60,7 +60,7 @@ export class FollowingService{
     
 
     async isFollowing(username: string, followerId: string) {
-        const userId = await this.prisma.user.findUnique({
+        const followingId = await this.prisma.user.findUnique({
             where: {
                 username: username,
             },
@@ -68,8 +68,8 @@ export class FollowingService{
         const following = await this.prisma.following.findUnique({
             where: {
                 followersId_followingId: {
-                    followersId: parseInt(followerId, 10),
-                    followingId: userId.id
+                    followersId: followingId.id,
+                    followingId: parseInt(followerId, 10),
                 }
             },
         });

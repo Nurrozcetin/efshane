@@ -1,17 +1,11 @@
-import { TestingModule } from '@nestjs/testing';
-import { AudioBook } from './../../node_modules/.prisma/client/index.d';
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "prisma/prisma.service";
 import { CreateBookDto } from "./dto/create-book.dto";
-import axios from 'axios';
-import { LibraryService } from "src/library/library.service";
 import { UpdateBookDto } from "./dto/update-book.dto";
-import { Prisma } from '@prisma/client';
 @Injectable()
 export class BookService{
     constructor(
         private readonly prisma: PrismaService,
-        private readonly libraryService: LibraryService,
     ) {}
     async createBook(
         bookDto: CreateBookDto,
@@ -55,6 +49,7 @@ export class BookService{
 
         const decodedNormalizedTitle = normalizeTitle(decodedTitle);      
         
+        console.log(bookDto.isAudioBook); 
         const book = await this.prisma.book.create({
             data: {
                 title,
@@ -62,7 +57,9 @@ export class BookService{
                 bookCover,
                 isAudioBook,
                 normalizedTitle: decodedNormalizedTitle,
-                userId: userID,
+                user: {
+                    connect: { id: userID },
+                },
                 publish : false,
                 publish_date: new Date(),
                 hashtags: {
@@ -99,24 +96,9 @@ export class BookService{
             },
         });
         
-        await this.libraryService.addBookToLibrary(book.id.toString(), userID, false);
         return book;
     }
 
-    // private async generateBookCover(title: string, summary: string) {
-    //     try {
-    //         const response = await this.axios.post('http://localhost:8000/generate', {
-    //             title,
-    //             summary,
-    //         });
-
-    //         return response.data.image_path;
-    //     } catch (error) {
-    //         console.error('Görsel oluşturma hatası:', error.message);
-    //         throw new Error('Görsel oluşturulamadı.');
-    //     }
-    // }
-    
     async getBookByTitle(decodedTitle: string, userId: number) {
         try {
             const normalizeTitle = (title: string) => {
@@ -167,7 +149,7 @@ export class BookService{
                                 }
                             }
                         }
-                    }
+                    },
                 },
             });        
     
@@ -389,32 +371,74 @@ export class BookService{
                 id: true,
                 title: true,
                 bookCover: true,
+                isAudioBook: false, 
                 user: {
                     select: {
                         username: true,
                         profile_image: true,
-                    }
+                    },
                 },
                 analysis: {
                     select: {
                         read_count: true,
-                    }
-                }
-            }
+                    },
+                },
+            },
         });
     
-        if (!books || books.length === 0) {
-            throw new NotFoundException(`Trend kitap bulunamadı`);
-        }
+        const audioBooks = await this.prisma.audioBook.findMany({
+            select: {
+                id: true,
+                title: true,
+                bookCover: true,
+                user: {
+                    select: {
+                        username: true,
+                        profile_image: true,
+                    },
+                },
+                analysis: {
+                    select: {
+                        read_count: true,
+                    },
+                },
+            },
+        });
     
-        books.sort((a, b) => {
-            const aReadCount = a.analysis.reduce((sum, item) => sum + (item.read_count || 0), 0);
-            const bReadCount = b.analysis.reduce((sum, item) => sum + (item.read_count || 0), 0);
+        if ((!books || books.length === 0) && (!audioBooks || audioBooks.length === 0)) {
+            throw new NotFoundException(`Trend kitap veya sesli kitap bulunamadı`);
+        }
+
+        const formattedBooks = books.flatMap((book) => ({
+            id: book.id,
+            title: book.title,
+            bookCover: book.bookCover,
+            isAudioBook: false, 
+            username: book.user.username,
+            profile_image: book.user?.profile_image,
+            analysis: book.analysis,
+        }));
+    
+        const formattedAudioBooks = audioBooks.flatMap((audioBook) => ({
+            id: audioBook.id,
+            title: audioBook.title,
+            bookCover: audioBook.bookCover,
+            username: audioBook.user.username,
+            isAudioBook: true,
+            profile_image: audioBook.user?.profile_image,
+            analysis: audioBook.analysis,
+        }));
+
+        const allBooks = [...formattedBooks, ...formattedAudioBooks];
+    
+        allBooks.sort((a, b) => {
+            const aReadCount = 'analysis' in a ? a.analysis.reduce((sum, item) => sum + (item.read_count || 0), 0) : 0;
+            const bReadCount = 'analysis' in b ? b.analysis.reduce((sum, item) => sum + (item.read_count || 0), 0) : 0;
             return bReadCount - aReadCount;
         });
     
-        return books;
-    }
+        return allBooks;
+    }    
 
     async getAllBook() {
         const currentYear = new Date().getFullYear();
@@ -434,15 +458,55 @@ export class BookService{
                     select: {
                         username: true,
                         profile_image: true,
-                    }
-                }
-            }
+                    },
+                },
+            },
         });
     
-        if (!books || books.length === 0) {
-            throw new NotFoundException(`Bu yıl yayınlanan kitap bulunamadı`);
+        const audioBooks = await this.prisma.audioBook.findMany({
+            where: {
+                publish_date: {
+                    gte: new Date(`${currentYear}-01-01`), 
+                    lt: new Date(`${currentYear + 1}-01-01`), 
+                },
+            },
+            orderBy: { publish_date: 'desc' },
+            select: {
+                id: true,
+                title: true,
+                bookCover: true,
+                user: {
+                    select: {
+                        username: true,
+                        profile_image: true,
+                    },
+                },
+            },
+        });
+    
+        const formattedBooks = books.flatMap((book) => ({
+            id: book.id,
+            title: book.title,
+            bookCover: book.bookCover,
+            isAudioBook: false, 
+            username: book.user.username,
+            profile_image: book.user?.profile_image, 
+        }));
+    
+        const formattedAudioBooks = audioBooks.flatMap((audioBook) => ({
+            id: audioBook.id,
+            title: audioBook.title,
+            bookCover: audioBook.bookCover,
+            username: audioBook.user.username,
+            isAudioBook: true,
+            profile_image: audioBook.user?.profile_image,
+        }));
+        const allBooks = [...formattedBooks, ...formattedAudioBooks];
+    
+        if (!allBooks || allBooks.length === 0) {
+            throw new NotFoundException(`Bu yıl yayınlanan kitap veya sesli kitap bulunamadı`);
         }
-        return books;
+        return allBooks;
     }
 
     async getAgeRange() {
@@ -476,7 +540,6 @@ export class BookService{
     }
 
     async getBooksByAuthorId(authorId: number) {
-        const baseUrl = 'http://localhost:5173'; 
         const books = await this.prisma.book.findMany({
             where: {
                 userId: authorId,
@@ -500,8 +563,11 @@ export class BookService{
 
         const formattedBooks = books.map((book) => ({
             ...book,
-            bookCover: `${baseUrl}/${book.bookCover}`,
+            read_count: book.analysis[0]?.read_count || 0,
+            comment_count: book.analysis[0]?.comment_count || 0,
+            like_count: book.analysis[0]?.like_count || 0,
         }));
+
         return formattedBooks;
     }
 
@@ -594,4 +660,248 @@ export class BookService{
         }));
         return formattedBooks;
     }
+
+    async getBookDetailsByTitle(decodedTitle: string, userId: number) {
+        try {
+            if (!decodedTitle) {
+                throw new BadRequestException("Title parameter is required.");
+            }
+    
+            const normalizeTitle = (title: string) => {
+                return title
+                    .toLowerCase()
+                    .normalize('NFC')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .trim()
+                    .replace(/\s+/g, ' ');
+            };
+    
+            const decodedNormalizedTitle = normalizeTitle(decodedTitle);
+    
+            const books = await this.prisma.book.findMany({
+                where: {
+                    OR: [
+                        { normalizedTitle: decodedNormalizedTitle },
+                        { title: decodedTitle },
+                    ],
+                },
+                select: {
+                    id: true,
+                    title: true,
+                    bookCover: true,
+                    summary: true,
+                    user: {
+                        select: {
+                            id: true,
+                            username: true,
+                            profile_image: true,
+                        },
+                    },
+                    like: {
+                        select:{
+                            id: true,
+                        }
+                    },
+                    bookCase: {
+                        select: {
+                            user: {
+                                select: {
+                                    id: true,
+                                },
+                            }
+                        }
+                    },
+                    readingList: {
+                        select: {
+                            user: {
+                                select: {
+                                    id: true,
+                                },
+                            },
+                        },
+                    },
+                    analysis: {
+                        select: {
+                            like_count: true,
+                            read_count: true,
+                            comment_count: true,
+                        },
+                    },
+                    ageRange: {
+                        select: {
+                            range: {
+                                select: {
+                                    range: true,
+                                }
+                            }
+                        },
+                    },
+                    bookCopyright: {
+                        select: {
+                            copyright: {
+                                select: {
+                                    copyright: true,
+                                },
+                            },
+                        },
+                    },
+                    categories: {
+                        select: {
+                            category: {
+                                select: {
+                                    name: true,
+                                },
+                            },
+                        },
+                    },
+                    hashtags: {
+                        select: {
+                            hashtag: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                }
+                            }
+                        }
+                    },
+                    comments: {
+                        select: {
+                            content: true,
+                            publish_date: true,
+                            user: {
+                                select: {
+                                    profile_image: true,
+                                    username: true,
+                                }
+                            }
+                        }
+                    }
+                },
+            });
+    
+            if (!books || books.length === 0) {
+                throw new NotFoundException("This book does not exist or does not belong to the provided username.");
+            }
+
+            return books.map((book) => {
+                const isInReadingList = book.readingList.some(reading => reading.user.id === userId);
+                const isInBookCase = book.bookCase.some(bookCase => bookCase.user.id === userId);
+                const isLiked = book.like.some(like => like.id === userId);
+
+                return {
+                    ...book,
+                    isReadingList: isInReadingList, 
+                    isBookCase: isInBookCase,
+                    isLiked: isLiked,
+                    ageRange: book.ageRange.map((range) => range.range.range), 
+                    bookCopyright: book.bookCopyright.map((copyright) => copyright.copyright.copyright), 
+                    categories: book.categories.map((category) => category.category.name),
+                    hashtags: book.hashtags.map((hashtag) => ({
+                        id: hashtag.hashtag.id,
+                        name: hashtag.hashtag.name,
+                    })), 
+                };
+            });
+        } catch (error) {
+            console.error('Kitap detayları alınamadı:', error);
+            throw error; 
+        }
+    }
+    
+    async toggleLikeBook(decodedTitle: string, userId: number) {
+        try {
+            if (!decodedTitle) {
+                throw new BadRequestException("Title parameter is required.");
+            }
+    
+            const normalizeTitle = (title: string) => {
+                return title
+                    .toLowerCase()
+                    .normalize('NFC')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .trim()
+                    .replace(/\s+/g, ' ');
+            };
+    
+            const decodedNormalizedTitle = normalizeTitle(decodedTitle);
+    
+            const books = await this.prisma.book.findMany({
+                where: {
+                    OR: [
+                        { normalizedTitle: decodedNormalizedTitle },
+                        { title: decodedTitle },
+                    ],
+                },
+                include: {
+                    user: true,
+                },
+            });
+    
+            if (!books || books.length === 0) {
+                throw new NotFoundException("This book does not exist or does not belong to the provided username.");
+            }
+
+            const existingLike = await this.prisma.like.findFirst({
+                where: { userId, bookId: books[0].id },
+            });
+
+            let like_count_change = 0;
+            let isLiked: boolean;
+
+            if (existingLike) {
+                await this.prisma.like.delete({
+                    where: { id: existingLike.id },
+                });
+        
+                like_count_change = -1; 
+                isLiked = false;
+            } else {
+                await this.prisma.like.create({
+                    data: {
+                        userId,
+                        bookId: books[0].id,
+                    },
+                });
+        
+                like_count_change = 1;
+                isLiked = true;
+            }
+
+            let analysis = await this.prisma.analysis.findFirst({
+                where: { bookId:  books[0].id },
+            });
+        
+            if (!analysis) {
+                analysis = await this.prisma.analysis.create({
+                    data: {
+                        like_count: 0,
+                        comment_count: 0,
+                        read_count: 0,
+                        repost_count: 0,
+                        comment: {
+                            connect: { id:  books[0].id },
+                        },
+                    },
+                });
+            }
+    
+            const updatedAnalysis = await this.prisma.analysis.update({
+                where: { id: analysis.id },
+                data: {
+                    like_count: { increment: like_count_change },
+                },
+            });
+        
+            return {
+                message: isLiked ? 'Kitap beğenildi.' : 'Beğeni kaldırıldı.',
+                like_count: updatedAnalysis.like_count,
+                isLiked,
+            };
+
+        } catch (error) {
+            console.error('Kitap detayları alınamadı:', error);
+            throw error; 
+        }
+    }
+    
 }

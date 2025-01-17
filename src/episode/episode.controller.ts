@@ -20,7 +20,6 @@ export class EpisodeController {
         if (!file) {
             throw new BadRequestException('Ses dosyası yüklenmedi.');
         }
-        console.log("Uploaded Audio:", file);
         return { filePath: `/uploads/audio/${file.filename}` };
     }
 
@@ -30,7 +29,6 @@ export class EpisodeController {
         if (!file) {
             throw new BadRequestException('Görsel yüklenemedi.');
         }
-        console.log("Uploaded Image:", file);
         return {
             filePath: `/uploads/audio/${file.filename}`,
         };
@@ -42,21 +40,31 @@ export class EpisodeController {
         if (!file) {
             throw new BadRequestException('Text yüklenemedi.');
         }
-        console.log("Uploaded Text:", file);
         return {
             filePath: `/uploads/audio/${file.filename}`,
         };
     }
-
+    
     @UseGuards(JwtAuthGuard)
     @Get(':bookTitle')
-    async getAllChaptersByBookId(
+    async getAllEpisodesByAudioBookTitle(
         @Param('bookTitle') bookTitle: string,
         @Req() req
     ) {
         const authorId = req.user.id;
         const decodedTitle = decodeURIComponent(bookTitle);
         return this.episodeService.getAllEpisodesByAudioBookTitle(authorId, decodedTitle);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('listen/audioBook/:bookTitle')
+    async getAllEpisodesByAudioBook(
+        @Param('bookTitle') bookTitle: string,
+        @Req() req
+    ) {
+        const authorId = req.user.id;
+        const decodedTitle = decodeURIComponent(bookTitle);
+        return this.episodeService.getAllEpisodesByAudioBook(authorId, decodedTitle);
     }
 
     @UseGuards(JwtAuthGuard)
@@ -109,33 +117,17 @@ export class EpisodeController {
         let imagePath = null;
 
         const decodedTitle = decodeURIComponent(bookTitle);
-
-        console.log('Received Files:', files);
     
         if (files.textFile) {
-            textPath = path.join(
-                'C:\\Users\\210601024\\Desktop\\efshanee\\efshane\\efshane\\uploads\\audio',
-                files.textFile[0].filename,
-            );
-            console.log('Image File:', files.textFile[0]);
-            console.log("Text Path: ", textPath);
+            textPath = `/uploads/audio/${files.textFile[0].filename}`;  
         }
+
         if (files.audioFile) {
-            audioPath = path.join(
-                'C:\\Users\\210601024\\Desktop\\efshanee\\efshane\\efshane\\uploads\\audio',
-                files.audioFile[0].filename,
-            );
-            console.log('Image File:', files.image[0]);
-            console.log('Audio File Path:', audioPath);
+            audioPath = `/uploads/audio/${files.audioFile[0].filename}`; 
         }
 
         if (files.image) {
-            imagePath = path.join(
-                'C:\\Users\\210601024\\Desktop\\efshanee\\efshane\\efshane\\uploads\\audio',
-                files.image[0].filename,
-            );
-            console.log('Image File:', files.image[0]);
-            console.log("Image Path: ", imagePath);
+            imagePath = `/uploads/audio/${files.image[0].filename}`; 
         }
 
         const episodeData = {
@@ -160,14 +152,14 @@ export class EpisodeController {
             {
                 storage: diskStorage({
                     destination: (req, file, callback) => {
-                        const basePath = path.resolve(__dirname, '..', 'uploads', 'audio');
-                        if (!fs.existsSync(basePath)) {
-                            fs.mkdirSync(basePath, { recursive: true });
+                        const uploadPath = path.join(process.cwd(), 'uploads', 'audio');
+                        if (!fs.existsSync(uploadPath)) {
+                            fs.mkdirSync(uploadPath, { recursive: true });
                         }
-                        callback(null, basePath);
+                        callback(null, uploadPath);
                     },
                     filename: (req, file, callback) => {
-                        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+                        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
                         const ext = path.extname(file.originalname);
                         callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
                     },
@@ -186,22 +178,34 @@ export class EpisodeController {
         },
     ) {
         const userId = req.user.id;
-    
         const decodedTitle = decodeURIComponent(bookTitle);
     
-        console.log('Received Files:', files);
+        let textPath = null;
+        let audioPath = null;
+        let imagePath = null;
     
-        const textPath = files.textFile && files.textFile[0] ? files.textFile[0].path : null;
-        const audioPath = files.audioFile && files.audioFile[0] ? files.audioFile[0].path : null;
-        const imagePath = files.image && files.image[0] ? files.image[0].path : null;
-    
+        if (files.textFile) {
+            textPath = `/uploads/audio/${files.textFile[0].filename}`;  
+            console.log(textPath);
+        }
+
+        if (files.audioFile) {
+            audioPath = `/uploads/audio/${files.audioFile[0].filename}`; 
+            console.log(audioPath);
+        }
+
+        if (files.image) {
+            imagePath = `/uploads/audio/${files.image[0].filename}`; 
+            console.log(imagePath);
+        }
+
         const episodeData = {
             ...body,
             textFile: textPath,
             audioFile: audioPath,
             image: imagePath,
         };
-    
+        console.log(episodeData);
         return this.episodeService.publishCreateEpisode(decodedTitle, episodeData, userId);
     }
     
@@ -233,18 +237,155 @@ export class EpisodeController {
         return book;
     }
 
-    //var olan bölümü editleme
     @UseGuards(JwtAuthGuard)
-    @Put('save/:bookTitle/:episodeId')
+    @Put('save/:bookTitle/:episodeTitle')
+    @UseInterceptors(
+        FileFieldsInterceptor(
+            [
+                { name: 'textFile', maxCount: 1 },
+                { name: 'audioFile', maxCount: 1 },
+                { name: 'image', maxCount: 1 },
+            ],
+            {
+                storage: diskStorage({
+                    destination: (req, file, callback) => {
+                        const basePath = path.join(
+                            __dirname,
+                            '..',
+                            '..',
+                            'uploads',
+                            'audio'
+                        );
+                        if (!fs.existsSync(basePath)) {
+                            fs.mkdirSync(basePath, { recursive: true });
+                        }
+                        callback(null, basePath);
+                    },
+                    filename: (req, file, callback) => {
+                        const uniqueSuffix =
+                            Date.now() + '-' + Math.round(Math.random() * 1e9);
+                        const ext = path.extname(file.originalname);
+                        callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+                    },
+                }),
+            },
+        ),
+    )
     async saveUpdateEpisode(
         @Param('bookTitle') bookTitle: string, 
-        @Param('episodeId') episodeId: string, 
+        @Param('episodeTitle') episodeTitle: string, 
         @Body() episodeDto: UpdateEpisodeDto,
-        @Req() req
+        @Req() req,
+        @UploadedFiles() files: {
+            textFile?: Express.Multer.File[];
+            audioFile?: Express.Multer.File[];
+            image?: Express.Multer.File[];
+        },
     ) {
         const authorId = req.user.id;
         const decodedTitle = decodeURIComponent(bookTitle);
-        const episode = await this.episodeService.saveUpdateEpisode(decodedTitle, episodeId, episodeDto, authorId);
+        const decodedEpisodeTitle = decodeURIComponent(episodeTitle);
+
+        let textPath = null;
+        let audioPath = null;
+        let imagePath = null;
+
+        if (files.textFile) {
+            textPath = `/uploads/audio/${files.textFile[0].filename}`;  
+        }
+
+        if (files.audioFile) {
+            audioPath = `/uploads/audio/${files.audioFile[0].filename}`; 
+        }
+
+        if (files.image) {
+            imagePath = `/uploads/audio/${files.image[0].filename}`; 
+        }       
+
+        const episodeData = {
+            ...episodeDto,
+            textFile: textPath,
+            audioFile: audioPath,
+            image: imagePath,
+        };
+
+        const episode = await this.episodeService.saveUpdateEpisode(decodedTitle, decodedEpisodeTitle, episodeData, authorId);
+        return episode;
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Put('save/:bookTitle/:episodeTitle')
+    @UseInterceptors(
+        FileFieldsInterceptor(
+            [
+                { name: 'textFile', maxCount: 1 },
+                { name: 'audioFile', maxCount: 1 },
+                { name: 'image', maxCount: 1 },
+            ],
+            {
+                storage: diskStorage({
+                    destination: (req, file, callback) => {
+                        const basePath = path.join(
+                            __dirname,
+                            '..',
+                            '..',
+                            'uploads',
+                            'audio'
+                        );
+                        if (!fs.existsSync(basePath)) {
+                            fs.mkdirSync(basePath, { recursive: true });
+                        }
+                        callback(null, basePath);
+                    },
+                    filename: (req, file, callback) => {
+                        const uniqueSuffix =
+                            Date.now() + '-' + Math.round(Math.random() * 1e9);
+                        const ext = path.extname(file.originalname);
+                        callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+                    },
+                }),
+            },
+        ),
+    )
+    async publishUpdateEpisode(
+        @Param('bookTitle') bookTitle: string, 
+        @Param('episodeTitle') episodeTitle: string, 
+        @Body() episodeDto: UpdateEpisodeDto,
+        @Req() req,
+        @UploadedFiles() files: {
+            textFile?: Express.Multer.File[];
+            audioFile?: Express.Multer.File[];
+            image?: Express.Multer.File[];
+        },
+    ) {
+        const authorId = req.user.id;
+        const decodedTitle = decodeURIComponent(bookTitle);
+        const decodedEpisodeTitle = decodeURIComponent(episodeTitle);
+
+        let textPath = null;
+        let audioPath = null;
+        let imagePath = null;
+
+        if (files.textFile) {
+            textPath = `/uploads/audio/${files.textFile[0].filename}`;  
+        }
+
+        if (files.audioFile) {
+            audioPath = `/uploads/audio/${files.audioFile[0].filename}`; 
+        }
+
+        if (files.image) {
+            imagePath = `/uploads/audio/${files.image[0].filename}`; 
+        }    
+
+        const episodeData = {
+            ...episodeDto,
+            textFile: textPath,
+            audioFile: audioPath,
+            image: imagePath,
+        };
+
+        const episode = await this.episodeService.publishUpdateEpisode(decodedTitle, decodedEpisodeTitle, episodeData, authorId);
         return episode;
     }
 }

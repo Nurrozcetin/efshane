@@ -1,9 +1,8 @@
-import {IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import {IsInt, IsOptional, IsString } from "class-validator";
 
 export class CreateEpisodeDto {
     id: string;
 
-    @IsNotEmpty()
     @IsString()
     title: string;
 

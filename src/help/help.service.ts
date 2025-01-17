@@ -1,13 +1,14 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, ConsoleLogger } from '@nestjs/common';
 import axios from 'axios';
 
 @Injectable()
 export class HelpService {
-    private readonly endpoint = 'https://models.inference.ai.azure.com';
+    private readonly endpoint = "https://models.inference.ai.azure.com";   
     private readonly modelName = 'gpt-4o-mini';
     private readonly apiKey = process.env['GITHUB_TOKEN'];
 
     async getChatResponse(userInput: string, currentContent: string): Promise<string> {
+        console.log("chat response");
         try {
             const response = await axios.post(
                 `${this.endpoint}/chat/completions`,
@@ -26,7 +27,7 @@ export class HelpService {
                             content: `Additional instruction: "${userInput}".`
                         }
                     ],
-                                        
+                
                     temperature: 1.0,
                     top_p: 1.0,
                     max_tokens: 1000,
@@ -40,6 +41,7 @@ export class HelpService {
                 },
                 },
             );
+            console.log("response", response.data.choices[0].message.content);
             return response.data.choices[0].message.content;
         } catch (error) {
             throw new HttpException(

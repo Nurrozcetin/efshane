@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { PrismaService } from "prisma/prisma.service";
 import { CreateChapterDto } from "./dto/create-chapter.dto";
 import { UpdateChapterDto } from "./dto/update-chapter.dto";
+import axios from 'axios';
 
 @Injectable()
 export class ChapterService{
@@ -64,8 +65,6 @@ export class ChapterService{
         if (existingChapter) {
             throw new ConflictException('A chapter with the same title already exists for this book.');
         }
-
-        const processedImage = image && image.trim() !== "" ? image : null;
         
         const decodedChapterNormalizedTitle = normalizeTitle(title);
 
@@ -77,7 +76,7 @@ export class ChapterService{
                 bookId: userBook.id,
                 userId,
                 publish: false,
-                image: processedImage,
+                image,
                 date: new Date(),
             },
         });
@@ -142,6 +141,11 @@ export class ChapterService{
     
         if (existingChapter) {
             throw new ConflictException('A chapter with the same title already exists for this book.');
+        }
+
+        const response = await axios.post('https://7ad7-34-46-82-119.ngrok-free.app/analyze', { text: content });
+        if (response.data.is_offensive === 1) {
+            throw new BadRequestException('Content contains offensive language and cannot be published.');
         }
 
         const decodedChapterNormalizedTitle = normalizeTitle(title);
@@ -296,6 +300,103 @@ export class ChapterService{
         return chapters;
     }
     
+    async getAllChaptersByBook(authorId: number, decodedTitle: string) {
+        const normalizeTitle = (title: string) => {
+            return title
+                .toLowerCase()
+                .normalize('NFC')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/ş/g, 's')
+                .replace(/ç/g, 'c')
+                .replace(/ğ/g, 'g')
+                .replace(/ü/g, 'u')
+                .replace(/ö/g, 'o')
+                .replace(/ı/g, 'i')
+                .replace(/[^a-z0-9\s-]/g, '')
+                .trim()
+                .replace(/\s+/g, '-');
+        };
+    
+        const decodedNormalizedTitle = normalizeTitle(decodedTitle);
+    
+        if (!decodedTitle) {
+            throw new BadRequestException("Title parameter is required.");
+        }
+    
+        
+        const book = await this.prisma.book.findFirst({
+            where: {
+                OR: [
+                    { normalizedTitle: decodedNormalizedTitle },
+                    { title: decodedTitle },
+                ],
+                userId: authorId,
+            },
+            select: {
+                id: true,
+                title: true,
+                like: {
+                    select: {
+                        id: true,
+                    },
+                },
+            },
+        });
+    
+        if (!book) {
+            throw new NotFoundException("This book does not exist. Please enter the correct title.");
+        }
+    
+        const isLiked = book.like.some(like => like.id === authorId);
+    
+        const chapters = await this.prisma.chapter.findMany({
+            where: {
+                userId: authorId,
+                bookId: book.id,
+            },
+            orderBy: { id: 'asc' },
+            select: {
+                id: true,
+                title: true,
+                content: true,
+                image: true,
+                analysis: {
+                    select: {
+                        like_count: true,
+                        comment_count: true,
+                        read_count: true,
+                    },
+                },
+                comments: {
+                    orderBy: { id: 'desc' },
+                    select: {
+                        id: true,
+                        content: true,
+                        user: {
+                            select: {
+                                username: true,
+                                profile_image: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    
+        if (!chapters || chapters.length === 0) {
+            throw new NotFoundException(`No chapters found for the book titled "${decodedTitle}".`);
+        }
+    
+        return {
+            book: {
+                id: book.id,
+                title: book.title,
+                isLiked: isLiked,
+            },
+            chapters,
+        };
+    }
+
     async deleteChapter(
         decodedTitle: string,
         decodedChapterTitle: string,
@@ -476,7 +577,7 @@ export class ChapterService{
                 where: { id: chapter.id },
                 data: {
                     title,
-                    image: processedImage,
+                    image,
                     content,
                     normalizedTitle: normalizeTitle(title),
                 },
@@ -560,7 +661,7 @@ export class ChapterService{
                 where: { id: chapter.id },
                 data: {
                     title,
-                    image: processedImage,
+                    image,
                     content,
                     normalizedTitle: normalizeTitle(title),
                     publish: true,

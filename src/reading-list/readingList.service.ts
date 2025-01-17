@@ -1,152 +1,198 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "prisma/prisma.service";
+import { title } from "process";
 @Injectable()
 export class ReadingListService {
     constructor(
         private readonly prisma: PrismaService
     ) {}
 
-    async addBookToReadingList(bookId: string, userId: number) {
-        let readingList = await this.prisma.readingList.findUnique({
-            where: { userId },
-        });
-
-        if (!readingList) {
-            readingList = await this.prisma.readingList.create({
-                data: {
-                    userId,
-                },
-            });
-        }
-
-        const updatedReadingList = await this.prisma.readingList.update({
-            where: { id: readingList.id }, 
-            data: {
-                books: {
-                    connect: { id: parseInt(bookId, 10)},
-                },
-            },
-            include: {
-                books: true, 
-            },
-        });
-        return updatedReadingList;
-    }
-
-    async showReadingList(userId: number) {
-        const readingList = await this.prisma.readingList.findUnique({
-            where: {
-                userId: userId
-            },
-            include: { 
-                books: {
-                    include: {
-                        analysis: {
-                            select: {
-                                read_count: true,
-                                comment_count: true,
-                                like_count: true,
-                            },
-                        },
-                    },
-                },
-            },
-        });
-
-        if (!readingList) {
-            throw new NotFoundException('Reading list not found for this user.');
-        }
-        return readingList;
-    }
-
-    async showUserReadingList(username: string) {
-        const user = await this.prisma.user.findUnique({
-            where: { username },
-        });
-
-        if (!user) {
-            throw new NotFoundException('User not found.');
-        }
-
-        const readingList = await this.prisma.readingList.findUnique({
-            where: { userId: user.id },
-            include: { 
-                books: {
-                    include: {
-                        analysis: {
-                            select: {
-                                read_count: true,
-                                comment_count: true,
-                                like_count: true,
-                            },
-                        },
-                    },
-                },
-            },
-        });
-
-        if (!readingList) {
-            throw new NotFoundException('Reading list not found for this user.');
-        }
-        return readingList;
-    }
-
-    async removeBookFromreadingList(bookId: number, userId: number, isAudioBook: boolean) {
-        const readingList =  await this.prisma.readingList.findUnique({
-            where:{
-                userId: userId
-            },
-            include: {
-                books: true,
-                audioBooks: true
-            },
-        });
-
-        if(!readingList) {
-            throw new NotFoundException('Reading list not found');
-        }
-
-        if(isAudioBook) {
-            const audioBookExists =  readingList.audioBooks.some((audioBook) => audioBook.id === bookId);
-            
-            if(!audioBookExists) {
-                throw new NotFoundException('This audiobook does not exist in the reading list');
-            }
-
-            await this.prisma.readingList.update({
+    async addBookToReadingList(bookId: string, userId: number, name: string) {
+        try {
+            const existingEntry = await this.prisma.readingList.findFirst({
                 where: {
-                    userId: userId
+                    userId: userId,
+                    bookId: parseInt(bookId),
                 },
-                data:{
-                    audioBooks: {
-                        disconnect:{
-                            id: bookId
-                        },
-                    }
-                }
             });
-        }
-        else {
-            const bookExists = readingList.books.some((book) => book.id === bookId);
-            if(!bookExists) {
-                throw new NotFoundException('This book does not exist in the reading list');
+        
+            if (existingEntry) {
+                await this.prisma.readingList.delete({
+                    where: {
+                        id: existingEntry.id,
+                    },
+                });
+                return { message: 'Kitap okuma listesinden çıkarıldı.' };
             }
-
-            await this.prisma.readingList.update({
-                where:{
-                    userId: userId
-                }, 
+        
+            await this.prisma.readingList.create({
                 data: {
-                    books: {
-                        disconnect: {
-                            id: bookId
-                        }
-                    }
-                }
+                    name: name,
+                    userId: userId,
+                    bookId: parseInt(bookId),
+                },
             });
+            console.log("asmögasç");
+            return { message: 'Kitap okuma listesine eklendi.' };
+
+        } catch (error) {
+            console.error('Error in addBookToReadingList:', error);
+            throw new BadRequestException('Bir hata oluştu.');
         }
-        return { message: 'Book successfully removed from the reading list.' };
     }
 
+    async addBookToListeningList(audioBookId: string, userId: number, name: string) {
+        try {
+            const existingEntry = await this.prisma.listeningList.findFirst({
+                where: {
+                    userId: userId,
+                    audioBookId: parseInt(audioBookId),
+                },
+            });
+        
+            if (existingEntry) {
+                await this.prisma.listeningList.delete({
+                    where: {
+                        id: existingEntry.id,
+                    },
+                });
+                return { message: 'Sesli kitap okuma listesinden çıkarıldı.' };
+            }
+        
+            await this.prisma.listeningList.create({
+                data: {
+                    name: name,
+                    userId: userId,
+                    audioBookId: parseInt(audioBookId),
+                },
+            });
+        
+            return { message: 'Sesli itap okuma listesine eklendi.' };
+
+        } catch (error) {
+            console.error('Error in addBookToListeningList:', error);
+            throw new BadRequestException('Bir hata oluştu.');
+        }
+    }
+
+    async getLastReadBook(userId: number) {
+        const lastReadBook = await this.prisma.readingList.findFirst({
+            where: { userId },
+            orderBy: { addedAt: 'desc' },
+            select: {
+                addedAt: true, 
+                name: true,
+                book: {
+                    select: {
+                        id: true,
+                        title: true,
+                        summary: true,
+                        bookCover: true,
+                        analysis: {
+                            select: {
+                                id: true,
+                                like_count: true,
+                                comment_count: true,
+                                read_count: true,
+                            },
+                        },
+                        user: {
+                            select: {
+                                id: true,
+                                username: true,
+                                profile_image: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
     
+        const lastListenAudioBook = await this.prisma.listeningList.findFirst({
+            where: { userId },
+            orderBy: { addedAt: 'desc' },
+            select: {
+                addedAt: true, 
+                name: true,
+                audioBook: {
+                    select: {
+                        id: true,
+                        title: true,
+                        summary: true,
+                        bookCover: true,
+                        analysis: {
+                            select: {
+                                id: true,
+                                like_count: true,
+                                comment_count: true,
+                                read_count: true,
+                            },
+                        },
+                        user: {
+                            select: {
+                                id: true,
+                                username: true,
+                                profile_image: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    
+        const allBooks = [
+            lastReadBook ? { ...lastReadBook, type: 'book' } : null,
+            lastListenAudioBook ? { ...lastListenAudioBook, type: 'audioBook' } : null,
+        ].filter(Boolean);
+        return allBooks.sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime())[0]; 
+    }
+
+    async getReadingList(userId: number) {
+        const lists = await this.prisma.readingList.groupBy({
+            by: ['name'],
+            where: { userId },
+            _count: {
+                bookId: true,
+            },
+        });
+    
+        const listsWithCovers = await Promise.all(
+            lists.map(async (list) => {
+                const firstBook = await this.prisma.readingList.findFirst({
+                    where: { userId, name: list.name },
+                    select: {
+                        book: {
+                            select: {
+                                bookCover: true,
+                            },
+                        },
+                    },
+                    orderBy: { addedAt: 'asc' }, 
+                });
+    
+                return {
+                    ...list,
+                    cover: firstBook?.book?.bookCover || 'default-book-cover.jpg',
+                };
+            })
+        );
+    
+        return listsWithCovers;
+    }
+    
+
+    async getBooksInList(userId: number, listName: string) {
+        return await this.prisma.readingList.findMany({
+            where: { userId, name: listName },
+            select: {
+                book: {
+                    select: {
+                        id: true,
+                        title: true,
+                        bookCover: true,
+                    },
+                },
+            },
+        });
+    }
 }

@@ -2,17 +2,13 @@ import { hash } from 'bcryptjs';
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "prisma/prisma.service";
 import { CreateAudioBookDto } from "./dto/create-audioBook.dto";
-import { LibraryService } from "src/library/library.service";
 import { UpdateAudioBookDto } from './dto/update-audiobook.dto';
-import { UpdateChapterDto } from "src/chapter/dto/update-chapter.dto";
-import { UpdateEpisodeDto } from "src/episode/dto/update-episode.dto";
-import { use } from 'passport';
 
 @Injectable()
 export class AudioBookService{
     constructor(
         private readonly prisma: PrismaService,
-        private readonly libraryService: LibraryService) {}
+    ) {}
     async createAudioBook(
         audioBookDto: CreateAudioBookDto,
         userId: number,
@@ -97,7 +93,6 @@ export class AudioBookService{
             },
         });
 
-        await this.libraryService.addBookToLibrary(audioBookk.id.toString(), userId, true);
         return audioBookk;
     } 
 
@@ -161,6 +156,141 @@ export class AudioBookService{
                 throw new NotFoundException("This audio book does not exist. Please enter the correct title.");
             }
             return userAudioBook;
+        } catch (error) {
+            console.error('Sesli kitap alınamadı:', error);
+            throw error; 
+        }
+    }
+
+
+    async getAudioBookForHome(decodedTitle: string, userId: number) {
+        try {
+            if (!decodedTitle) {
+                throw new BadRequestException("Title parameter is required.");
+            }
+
+            const normalizeTitle = (title: string) => {
+                return title
+                    .toLowerCase() 
+                    .normalize('NFC') 
+                    .replace(/[\u0300-\u036f]/g, '') 
+                    .trim() 
+                    .replace(/\s+/g, ' '); 
+            };
+            
+            const decodedNormalizedTitle = normalizeTitle(decodedTitle);
+
+            if (!decodedTitle) {
+                throw new BadRequestException("Title parameter is required.");
+            }
+        
+            const audioBooks = await this.prisma.audioBook.findMany({
+                where: {
+                    OR: [
+                        { normalizedTitle: decodedNormalizedTitle },
+                        { title: decodedTitle },
+                    ],
+                },
+                select: {
+                    id: true,
+                    title: true,
+                    bookCover: true,
+                    duration: true,
+                    summary: true,
+                    user: {
+                        select: {
+                            id: true,
+                            username: true,
+                            profile_image: true,
+                        },
+                    },
+                    audioBookCase: {
+                        select: {
+                            user: {
+                                select: {
+                                    id: true,
+                                },
+                            }
+                        }
+                    },
+                    listeningList: {
+                        select: {
+                            user: {
+                                select: {
+                                    id: true,
+                                },
+                            },
+                        },
+                    },
+                    analysis: {
+                        select: {
+                            like_count: true,
+                            read_count: true,
+                            comment_count: true,
+                        },
+                    },
+                    ageRange: {
+                        select: {
+                            range: true,
+                        },
+                    },
+                    bookCopyright: {
+                        select: {
+                            copyright: true,
+                        },
+                    },
+                    category: {
+                        select: {
+                            category: {
+                                select: {
+                                    name: true,
+                                },
+                            },
+                        },
+                    },
+                    hashtags: {
+                        select: {
+                            hashtag: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                }
+                            }
+                        }
+                    },
+                    comments: {
+                        select: {
+                            content: true,
+                            publish_date: true,
+                            user: {
+                                select: {
+                                    profile_image: true,
+                                    username: true,
+                                }
+                            }
+                        }
+                    }
+                },
+            });  
+
+            console.log(audioBooks);
+            return audioBooks.map((book) => {
+                const isInListeningList = book.listeningList.some(listening => listening.user.id === userId);
+                const isAudioBookCase = book.audioBookCase.some(bookCase => bookCase.user.id === userId);
+    
+                return {
+                    ...book,
+                    isListeningList: isInListeningList, 
+                    isAudioBookCase: isAudioBookCase,
+                    ageRange: book.ageRange?.map((range) => range.range?.range) || [],
+                    bookCopyright: book.bookCopyright?.map((copyright) => copyright.copyright?.copyright) || [], 
+                    categories: book.category?.map((category) => category.category?.name) || [], 
+                    hashtags: book.hashtags?.map((hashtag) => ({
+                        id: hashtag.hashtag?.id,
+                        name: hashtag.hashtag?.name,
+                    })) || [],
+                };      
+            });
         } catch (error) {
             console.error('Sesli kitap alınamadı:', error);
             throw error; 
@@ -310,7 +440,7 @@ export class AudioBookService{
                 title: audioBookDto.title,
                 summary: audioBookDto.summary,
                 normalizedTitle: normalizeTitle(audioBookDto.title),
-                bookCover: audioBookDto.bookCover,
+                bookCover: audioBookDto.bookCover || null,
                 ...hashtagsData,
                 ...categoryData,
                 ...ageRangeData,
@@ -353,7 +483,14 @@ export class AudioBookService{
                 },
             },
         });
-        return audioBooks;
+        const formattedBooks = audioBooks.map((book) => ({
+            ...book,
+            read_count: book.analysis[0]?.read_count || 0,
+            comment_count: book.analysis[0]?.comment_count || 0,
+            like_count: book.analysis[0]?.like_count || 0,
+        }));
+
+        return formattedBooks;
     }
 
     async deleteBook(bookId: string, userId: number) {
@@ -475,8 +612,6 @@ export class AudioBookService{
                 bookCopyrightId: copyright.bookCopyrightId,
             })),
         });
-    
-        console.log("AudioBook:", audioBook);
         return audioBook;
     }    
     
@@ -533,4 +668,100 @@ export class AudioBookService{
     
         return updatedBook;
     }  
+
+    async toggleLikeAudioBook(decodedTitle: string, userId: number) {
+        try {
+            if (!decodedTitle) {
+                throw new BadRequestException("Title parameter is required.");
+            }
+    
+            const normalizeTitle = (title: string) => {
+                return title
+                    .toLowerCase()
+                    .normalize('NFC')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .trim()
+                    .replace(/\s+/g, ' ');
+            };
+    
+            const decodedNormalizedTitle = normalizeTitle(decodedTitle);
+    
+            const audioBooks = await this.prisma.audioBook.findMany({
+                where: {
+                    OR: [
+                        { normalizedTitle: decodedNormalizedTitle },
+                        { title: decodedTitle },
+                    ],
+                },
+                include: {
+                    user: true,
+                },
+            });
+    
+            if (!audioBooks || audioBooks.length === 0) {
+                throw new NotFoundException("This audio book does not exist or does not belong to the provided username.");
+            }
+
+            const existingLike = await this.prisma.like.findFirst({
+                where: { userId, audioBookId: audioBooks[0].id },
+            });
+
+            let like_count_change = 0;
+            let isLiked: boolean;
+
+            if (existingLike) {
+                await this.prisma.like.delete({
+                    where: { id: existingLike.id },
+                });
+        
+                like_count_change = -1; 
+                isLiked = false;
+            } else {
+                await this.prisma.like.create({
+                    data: {
+                        userId,
+                        audioBookId: audioBooks[0].id,
+                    },
+                });
+        
+                like_count_change = 1;
+                isLiked = true;
+            }
+
+            let analysis = await this.prisma.analysis.findFirst({
+                where: { audioBookId:  audioBooks[0].id },
+            });
+        
+            if (!analysis) {
+                analysis = await this.prisma.analysis.create({
+                    data: {
+                        like_count: 0,
+                        comment_count: 0,
+                        read_count: 0,
+                        repost_count: 0,
+                        comment: {
+                            connect: { id: audioBooks[0].id },
+                        },
+                    },
+                });
+            }
+    
+            const updatedAnalysis = await this.prisma.analysis.update({
+                where: { id: analysis.id },
+                data: {
+                    like_count: { increment: like_count_change },
+                },
+            });
+        
+            return {
+                message: isLiked ? 'Kitap beğenildi.' : 'Beğeni kaldırıldı.',
+                like_count: updatedAnalysis.like_count,
+                isLiked,
+            };
+
+        } catch (error) {
+            console.error('Kitap detayları alınamadı:', error);
+            throw error; 
+        }
+    }
 }

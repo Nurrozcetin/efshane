@@ -189,6 +189,42 @@ export class CategoryService {
             },
         });
 
+        const suggestionsAudioBook = await this.prisma.userCategory.findMany({
+            where: {
+                userId
+            },
+            include:{
+                category: {
+                    select: {
+                        audioBookCategories: {
+                            select: {
+                                audioBook: {
+                                    select: {
+                                        id: true,
+                                        title: true,
+                                        bookCover: true,
+                                        user: {
+                                            select: {
+                                                id: true,
+                                                username: true,
+                                                profile_image: true,
+                                            },
+                                        },
+                                        analysis: {
+                                            select: {
+                                                read_count: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                    }
+                },
+            },
+        });
+
         const books = suggestions.flatMap(suggestion =>
             suggestion.category.bookCategories.map(book => ({
                 id: book.book.id,
@@ -199,9 +235,23 @@ export class CategoryService {
                 profile_image: book.book.user.profile_image
             }))
         );
+
+        const audioBooks = suggestionsAudioBook.flatMap((suggestion) =>
+            suggestion.category.audioBookCategories.map((audioBook) => ({
+                id: audioBook.audioBook.id,
+                title: audioBook.audioBook.title,
+                bookCover: audioBook.audioBook.bookCover,
+                isAudioBook: true, 
+                readCount: audioBook.audioBook.analysis.reduce((acc, item) => acc + (item.read_count || 0), 0),
+                username: audioBook.audioBook.user.username,
+                profile_image: audioBook.audioBook.user.profile_image,
+            }))
+        );
         
-        books.sort((a, b) => b.readCount - a.readCount);
-        return books;        
+        const allBooks = [...books, ...audioBooks];
+        allBooks.sort((a, b) => b.readCount - a.readCount);
+
+        return allBooks;
     }
 
     async getAllCategories() {
@@ -234,6 +284,33 @@ export class CategoryService {
                                     id: true,
                                     title: true,
                                     bookCover: true,
+                                    isAudioBook: true,
+                                    user: {
+                                        select: {
+                                            username: true,
+                                            profile_image: true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const audioBooksByCategories = await this.prisma.category.findUnique({
+                where: {
+                    name: categoryName,
+                },
+                select: {
+                    name: true,
+                    audioBookCategories: {
+                        select: {
+                            audioBook: {
+                                select: {
+                                    id: true,
+                                    title: true,
+                                    bookCover: true,
                                     user: {
                                         select: {
                                             username: true,
@@ -251,21 +328,39 @@ export class CategoryService {
                 throw new Error("Kategori bulunamadı veya bu kategoriye ait kitap yok.");
             }
     
-            const baseUrl = 'http://localhost:5173'; 
             const books = booksByCategories.bookCategories.reduce((acc, bookCategory) => {
                 const book = bookCategory.book;
                 if (book) {
                     acc.push({
                         id: book.id,
                         title: book.title,
-                        bookCover: `${baseUrl}/${book.bookCover}`, 
+                        bookCover: book.bookCover,
                         username: book.user.username,
-                        profile_image: `${baseUrl}/${book.user.profile_image}`, 
+                        isAudiobook: book.isAudioBook,
+                        profile_image: book.user.profile_image, 
                     });
                 }
                 return acc;
             }, []);
-            return books;
+
+            const audioBooks = audioBooksByCategories.audioBookCategories.reduce((acc, bookCategory) => {
+                const book = bookCategory.audioBook;
+                if (book) {
+                    acc.push({
+                        id: book.id,
+                        title: book.title,
+                        bookCover: book.bookCover,
+                        username: book.user.username,
+                        profile_image: book.user.profile_image, 
+                    });
+                }
+                return acc;
+            }, []);
+
+            const allBooks = [...books, ...audioBooks];
+            allBooks.sort((a, b) => b.readCount - a.readCount);
+    
+            return allBooks;
         } catch (error) {
             console.error("Hata:", error);
             throw new Error("Kitapları getirirken bir hata oluştu."); 

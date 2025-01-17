@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "prisma/prisma.service";
 import { CreatePostDto } from "./dto/create-post.dto";
-import { repl } from "@nestjs/core";
 
 @Injectable()
 export class FeedService{
@@ -356,7 +355,7 @@ export class FeedService{
             ...comment,
             analysis: comment.analysis[0],
             isLiked: comment.like.length > 0, 
-            replies: this.getRepliesForComment(comment.id.toString()),
+            replies: comment.replies || [],
         }));
     }
     
@@ -419,17 +418,6 @@ export class FeedService{
                         comment_count: true,
                     }
                 },
-                replies: {
-                    select: {
-                        content: true,
-                        user: {
-                            select: {
-                                username: true,
-                                profile_image: true,
-                            }
-                        }
-                    }
-                }
             },
         });
     
@@ -456,7 +444,6 @@ export class FeedService{
         return {
             ...comments,
             analysis: comments.analysis[0],
-            replies: comments.replies[0],
             isLiked: comments.like.length > 0, 
             commentCount: updatedAnalysis.comment_count,
             message: 'Yanıt başarıyla eklendi.',
@@ -486,16 +473,6 @@ export class FeedService{
                     select: {
                         username: true,
                         profile_image: true,
-                    },
-                },
-                replies: {
-                    include: {
-                        user: {
-                            select: {
-                                username: true,
-                                profile_image: true,
-                            },
-                        },
                     },
                 },
                 like: true,

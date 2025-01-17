@@ -3,13 +3,14 @@ import os
 from pydantic import BaseModel
 import pyttsx3
 from pydub import AudioSegment
-from fastapi.responses import FileResponse
 import uuid
+import time
 
 app = FastAPI()
 
-OUTPUT_DIR = "output"
-os.makedirs(OUTPUT_DIR, exist_ok=True)  
+UPLOADS_DIR = os.path.abspath(os.path.join("..", "..", "uploads", "audio"))
+print(f"Uploads Directory: {UPLOADS_DIR}")
+os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 class TextToSpeechRequest(BaseModel):
     content: str
@@ -18,7 +19,6 @@ class TextToSpeechRequest(BaseModel):
 async def text_to_speech(request: TextToSpeechRequest):
     try:
         content = request.content
-
         engine = pyttsx3.init()
         voices = engine.getProperty('voices')
 
@@ -26,11 +26,13 @@ async def text_to_speech(request: TextToSpeechRequest):
             if "Tolga" in voice.name:
                 engine.setProperty('voice', voice.id)
                 break
+        engine.setProperty('rate', 130)  
 
-        engine.setProperty('rate', 130)
+        timestamp = int(time.time() * 1000)
+        random_suffix = uuid.uuid4().hex[:8]
+        output_mp3_file = os.path.join(UPLOADS_DIR, f"audioFile-{timestamp}-{random_suffix}.mp3")
 
-        temp_wav_file = os.path.join(OUTPUT_DIR, f"temp_audio_{uuid.uuid4().hex}.wav")
-        output_mp3_file = os.path.join(OUTPUT_DIR, f"output_{uuid.uuid4().hex}.mp3")
+        temp_wav_file = os.path.join(UPLOADS_DIR, f"temp_audio_{uuid.uuid4().hex}.wav")
 
         engine.save_to_file(content, temp_wav_file)
         engine.runAndWait()
@@ -40,8 +42,9 @@ async def text_to_speech(request: TextToSpeechRequest):
 
         os.remove(temp_wav_file)
 
-        return FileResponse(output_mp3_file, media_type='audio/mpeg', headers={"Content-Disposition": f"attachment; filename={os.path.basename(output_mp3_file)}"})
+        relative_path = f"/uploads/audio/{os.path.basename(output_mp3_file)}"
+        absolute_url = f"http://localhost:3000{relative_path}" 
+        return {"filePath": absolute_url}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    

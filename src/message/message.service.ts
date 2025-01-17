@@ -49,18 +49,16 @@ export class MessageService{
     
         if (!sender) {
             throw new Error('Gönderici kullanıcı bulunamadı.');
-        }
-    
-        const baseUrl = 'http://localhost:5173';  
+        }  
     
         const newMessage = {
             id: message.id,
-            senderImage: `${baseUrl}/${sender.profile_image}`,
+            senderImage: sender.profile_image,
             sender: sender.username,
             content: this.encryptService.decrypt(message.content),
             senderUsername: true,
             sendDate: message.date.toISOString(),
-            receiverImage: `${baseUrl}/${receiver.profile_image}`,
+            receiverImage: receiver.profile_image,
             receiverUsername: receiver.username,  
         };        
         return newMessage;
@@ -168,14 +166,12 @@ export class MessageService{
                 date: 'asc',
             },
         });
-    
-        const baseUrl = 'http://localhost:5173';
-    
+        
         const processedMessages = messages.map((message) => {
             const senderUsername = message.sender?.username;
             const receiverUsername = message.receiver?.username;
-            const senderProfileImage = `${baseUrl}/${message.sender.profile_image}`;
-            const receiverProfileImage = `${baseUrl}/${message.receiver.profile_image}`;
+            const senderProfileImage = message.sender.profile_image;
+            const receiverProfileImage = message.receiver.profile_image;
     
             return {
                 id: message.id,
@@ -192,6 +188,7 @@ export class MessageService{
         });
         return processedMessages;
     }
+
 
     async markAsRead(messageIds: number[], userId: number) {
         const messageIDArray = messageIds.map(id => id);

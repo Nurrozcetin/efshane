@@ -1,4 +1,5 @@
-import { IsArray, IsBoolean, IsNotEmpty, IsString } from "class-validator";
+import { Transform } from "class-transformer";
+import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateBookDto {
     id: string;
@@ -15,15 +16,31 @@ export class CreateBookDto {
     @IsString()
     summary: string;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
-    bookCover: string;
+    bookCover?: string;
 
+    @IsNotEmpty()
     @IsBoolean()
+    @Transform(({ value }) => value === "true" || value === true) 
     isAudioBook: boolean;
     
     @IsArray()
     @IsString({ each: true })
+    @Transform(({ value }) => {
+        if (typeof value === "string") {
+            try {
+                return JSON.parse(value);
+            } catch {
+                
+                throw new SyntaxError(`Invalid JSON for hashtags: ${value}`);
+            }
+        }
+        if (Array.isArray(value)) {
+            return value; 
+        }
+        return []; 
+    })
     hashtags?: string[];
     
     @IsString()

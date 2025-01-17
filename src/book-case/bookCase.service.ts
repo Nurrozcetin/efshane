@@ -1,5 +1,5 @@
 import { User } from '@prisma/client';
-import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "prisma/prisma.service";
 
 @Injectable()
@@ -8,136 +8,192 @@ export class BookCaseService {
         private readonly prisma: PrismaService
     ) {}
 
-    async addBookToBookCase(bookId: string, userId: number, isAudioBook: boolean) {
-        let book;
-
-        if (isAudioBook) {
-            book = await this.prisma.audioBook.findUnique({
-                where: { id: parseInt(bookId, 10) },
+    async addBookBookCase(decodedBookTitle: string, userId: number) {
+        try {
+            const normalizeTitle = (title: string) => {
+                return title
+                    .toLowerCase() 
+                    .normalize('NFC') 
+                    .replace(/[\u0300-\u036f]/g, '') 
+                    .trim() 
+                    .replace(/\s+/g, ' '); 
+            };
+            
+            const decodedNormalizedTitle = normalizeTitle(decodedBookTitle);
+    
+            if (!decodedBookTitle) {
+                throw new BadRequestException("Title parameter is required.");
+            }
+                
+            const book = await this.prisma.book.findFirst({
+                where: {
+                    OR: [
+                        { title: decodedNormalizedTitle }, 
+                        { normalizedTitle: decodedNormalizedTitle }
+                    ]
+                },
             });
-        } else {
-            book = await this.prisma.book.findUnique({
-                where: { id: parseInt(bookId, 10) },
+    
+            if (!book) {
+                throw new BadRequestException("Kitap bulunamadı.");
+            }
+    
+            const existingEntry = await this.prisma.bookCase.findFirst({
+                where: {
+                    userId: userId,
+                    bookId: book.id,
+                },
             });
-        }
-
-        if (!book) {
-            throw new NotFoundException('This book does not exist.');
-        }
-
-        let bookCase = await this.prisma.bookCase.findFirst({
-            where: { userId: userId },
-            include: { books: true, audioBooks: true },
-        });
-
-        if (!bookCase) {
-            bookCase = await this.prisma.bookCase.create({
+    
+            if (existingEntry) {
+                await this.prisma.bookCase.delete({
+                    where: {
+                        id: existingEntry.id,
+                    },
+                });
+                return { message: 'Kitap kütüphaneden çıkarıldı.' };
+            }
+    
+            await this.prisma.bookCase.create({
                 data: {
                     userId: userId,
-                    books: { connect: [] },        
-                    audioBooks: { connect: [] },  
-                },
-                include: { books: true, audioBooks: true },
-            });
-        }
-
-        if (isAudioBook) {
-            await this.prisma.bookCase.update({
-                where: { id: bookCase.id },
-                data: {
-                    audioBooks: {
-                        connect: {
-                            id: book.id,
-                        },
-                    },
+                    bookId: book.id,
                 },
             });
-        } else {
-            await this.prisma.bookCase.update({
-                where: { id: bookCase.id },
-                data: {
-                    books: {
-                        connect: {
-                            id: book.id,
-                        },
-                    },
-                },
-            });
-        }
-        
-        return bookCase;
-    }
-
-    async showBookCase(userId: number) {
-        const bookCase = this.prisma.bookCase.findUnique({
-            where: {
-                userId: userId
-            },
-            include: { books: true, audioBooks: true },
-        });
-
-        if (!bookCase) {
-            throw new NotFoundException('Book case not found for this user.');
-        }
-        return bookCase;
-    }
-
-     // get last reading book
     
-    async removeBookFromBookCase(bookId: number, userId: number, isAudioBook: boolean) {
-        const bookCase =  await this.prisma.bookCase.findUnique({
-            where:{
-                userId: userId
-            },
-            include: {
-                books: true,
-                audioBooks: true
+            return { message: 'Kitap kütüphaneye eklendi.' };
+    
+        } catch (error) {
+            console.error('Error in addBookBookCase:', error);
+            throw new BadRequestException('Bir hata oluştu.');
+        }
+    }
+    
+    async addAudioBookBookCase(decodedAudioBookTitle: string, userId: number) {
+        try {
+            const normalizeTitle = (title: string) => {
+                return title
+                    .toLowerCase() 
+                    .normalize('NFC') 
+                    .replace(/[\u0300-\u036f]/g, '') 
+                    .trim() 
+                    .replace(/\s+/g, ' '); 
+            };
+            
+            const decodedNormalizedTitle = normalizeTitle(decodedAudioBookTitle);
+
+            if (!decodedAudioBookTitle) {
+                throw new BadRequestException("Title parameter is required.");
+            }
+
+            console.log('decodedAudioBookTitle:', decodedAudioBookTitle);
+            const audioBook = await this.prisma.audioBook.findFirst({
+                where: {
+                    OR: [
+                        { normalizedTitle: decodedNormalizedTitle },
+                        { title: decodedNormalizedTitle },
+                    ],
+                },
+            });
+        
+            const existingEntry = await this.prisma.audioBookCase.findFirst({
+                where: {
+                    userId: userId,
+                    audioBookId: audioBook.id,
+                },
+            });
+    
+            if (existingEntry) {
+                await this.prisma.audioBookCase.delete({
+                    where: {
+                        id: existingEntry.id,
+                    },
+                });
+                return { message: 'Sesli kitap kütüphaneden çıkarıldı.' };
+            }
+    
+            await this.prisma.audioBookCase.create({
+                data: {
+                    userId: userId,
+                    audioBookId: audioBook.id,
+                },
+            });
+    
+            return { message: 'Sesli kitap kütüphaneye eklendi.' };
+    
+        } catch (error) {
+            console.error('Error in addAudioBookBookCase:', error);
+            throw new BadRequestException('Bir hata oluştu.');
+        }
+    } 
+    
+    async getLastReadBook(userId: number) {
+        const lastReadBook = await this.prisma.bookCase.findFirst({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+            select: {
+                createdAt: true, 
+                book: {
+                    select: {
+                        id: true,
+                        title: true,
+                        summary: true,
+                        bookCover: true,
+                        analysis: {
+                            select: {
+                                id: true,
+                                like_count: true,
+                                comment_count: true,
+                                read_count: true,
+                            },
+                        },
+                        user: {
+                            select: {
+                                id: true,
+                                username: true,
+                                profile_image: true,
+                            },
+                        },
+                    },
+                },
             },
         });
-
-        if(!bookCase) {
-            throw new NotFoundException('Book case not found');
-        }
-
-        if(isAudioBook) {
-            const audioBookExists =  bookCase.audioBooks.some((audioBook) => audioBook.id === bookId);
-            
-            if(!audioBookExists) {
-                throw new NotFoundException('This audiobook does not exist in the book case');
-            }
-
-            await this.prisma.bookCase.update({
-                where: {
-                    userId: userId
-                },
-                data:{
-                    audioBooks: {
-                        disconnect:{
-                            id: bookId
+    
+        const lastListenAudioBook = await this.prisma.audioBookCase.findFirst({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+            select: {
+                createdAt: true, 
+                audioBooks: {
+                    select: {
+                        id: true,
+                        title: true,
+                        summary: true,
+                        bookCover: true,
+                        analysis: {
+                            select: {
+                                id: true,
+                                like_count: true,
+                                comment_count: true,
+                                read_count: true,
+                            },
                         },
-                    }
-                }
-            });
-        }
-        else {
-            const  bookExists = bookCase.books.some((book) => book.id === bookId);
-            if(!bookExists) {
-                throw new NotFoundException('This book does not exist in the book case');
-            }
-
-            await this.prisma.bookCase.update({
-                where:{
-                    userId: userId
-                }, 
-                data: {
-                    books: {
-                        disconnect: {
-                            id: bookId
-                        }
-                    }
-                }
-            });
-        }
-        return { message: 'Book successfully removed from the book case.' };
+                        user: {
+                            select: {
+                                id: true,
+                                username: true,
+                                profile_image: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    
+        const allBooks = [
+            lastReadBook ? { ...lastReadBook, type: 'book' } : null,
+            lastListenAudioBook ? { ...lastListenAudioBook, type: 'audioBook' } : null,
+        ].filter(Boolean);
+        return allBooks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]; // En yeni olanı döndür.
     }
 }

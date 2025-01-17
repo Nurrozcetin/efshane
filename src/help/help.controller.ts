@@ -1,8 +1,5 @@
 import { Controller, Get, Res, HttpStatus, Body, Post, UseGuards, Req } from '@nestjs/common';
-import { Response } from 'express';
 import { HelpService } from './help.service';
-import { JwtAuthGuard } from 'src/auth/guards/jwt.guards';
-
 @Controller('openai')
 export class HelpController {
     constructor(private readonly helpService: HelpService) {}

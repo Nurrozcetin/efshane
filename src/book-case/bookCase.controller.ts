@@ -37,4 +37,13 @@ export class BookCaseController {
         const lastReadBook = await this.bookCaseService.getLastReadBook(userId);
         return lastReadBook;
     }    
+
+    @UseGuards(JwtAuthGuard)
+    @Get('allBooks')
+    async getBooks(
+        @Req() req
+    ) {
+        const authorId = req.user.id;
+        return this.bookCaseService.getBooks(authorId);
+    }
 }

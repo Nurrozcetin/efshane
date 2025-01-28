@@ -190,7 +190,7 @@ export class EpisodeService {
             episode: episode.map(ep => ({
                 ...ep,
                 audioFile: `/uploads/audio/${ep.audioFile.split('/').pop()}`,
-                image: ep.image ? `/uploads/images/${ep.image.split('/').pop()}` : null
+                image: ep.image ? `/uploads/audio/${ep.image.split('/').pop()}` : null
             })),
         };
     }    

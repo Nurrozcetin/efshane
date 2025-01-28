@@ -60,6 +60,9 @@ import { FeedModule } from './feed/feed.module';
 import { FeedService } from './feed/feed.service';
 import { NotificationsGateway } from './notification/notification.gateway';
 import { MessagesGateway } from './message/message.gateway';
+import { ProgressModule } from './progress/progress.module';
+import { ProgressService } from './progress/progress.service';
+import { ProgressController } from './progress/progress.controller';
 
 @Module({
   imports: [
@@ -70,8 +73,8 @@ import { MessagesGateway } from './message/message.gateway';
         fallthrough: false, 
       },
     }),
-    PrismaModule, UsersModule, AuthModule, AnnouncementModule, ChapterModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, ReadingListModule, BookCaseModule, FollowingModule, BookModule, EpisodeModule, AudioBookModule, HttpModule, MailerModule, HelpModule, NestjsFormDataModule, FeedModule, NotificationsGateway, MessagesGateway],
-  controllers: [AppController, UserController, AuthController, AnnouncementController, ChapterController, CommentController, MessageController, CategoryController, NotifyController, ReadingListController, BookCaseController, FollowingController, BookController, EpisodeController, AudioBookController, MailerController, HelpController, FeedController],
-  providers: [AppService, UserService, AnnouncementService, ChapterService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, ReadingListService, BookCaseService, FollowingService, BookService, EpisodeService, AudioBookService, MailerService, ConfigService, HelpService, FeedService, NotificationsGateway, MessagesGateway],
+    PrismaModule, UsersModule, AuthModule, AnnouncementModule, ChapterModule, CommentModule, MessageModule, CategoryModule, NotifyModule, CategoryModule, ReadingListModule, BookCaseModule, FollowingModule, BookModule, EpisodeModule, AudioBookModule, HttpModule, MailerModule, HelpModule, NestjsFormDataModule, FeedModule, NotificationsGateway, MessagesGateway, ProgressModule],
+  controllers: [AppController, UserController, AuthController, AnnouncementController, ChapterController, CommentController, MessageController, CategoryController, NotifyController, ReadingListController, BookCaseController, FollowingController, BookController, EpisodeController, AudioBookController, MailerController, HelpController, FeedController, ProgressController],
+  providers: [AppService, UserService, AnnouncementService, ChapterService, CommentService, MessageService, EncryptionService, CategoryService, NotifyService, ReadingListService, BookCaseService, FollowingService, BookService, EpisodeService, AudioBookService, MailerService, ConfigService, HelpService, FeedService, NotificationsGateway, MessagesGateway, ProgressService],
 })
 export class AppModule {}

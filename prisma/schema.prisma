@@ -39,6 +39,7 @@ model User {
   post              Post[]
   like              Like[]
   repost            Repost[]
+  progress          Progress[]
 }
 
 model Book {
@@ -63,6 +64,7 @@ model Book {
   bookCase          BookCase[]      
   readingList       ReadingList[]   
   like              Like[]
+  progress          Progress[]
 }
 
 model Post {
@@ -100,6 +102,7 @@ model Chapter {
   user              User        @relation(fields: [userId], references: [id])
   analysis          Analysis[]
   comments          Comments[]
+  progress          Progress[]
 }
 
 model Analysis {
@@ -220,6 +223,7 @@ model AudioBook {
   listeningList     ListeningList[]
   audioBookCase     AudioBookCase[]
   like              Like[]
+  progress          Progress[] 
 }
 
 model Episodes {
@@ -238,6 +242,7 @@ model Episodes {
   audiobook       AudioBook?      @relation(fields: [audiobookId], references: [id], onDelete: Cascade)
   analysis        Analysis[]
   comments        Comments[]
+  progress          Progress[]
 }
 
 model Hashtags {
@@ -385,4 +390,21 @@ model ListeningList {
   addedAt   DateTime    @default(now())                
   user      User        @relation(fields: [userId], references: [id])
   audioBook AudioBook   @relation(fields: [audioBookId], references: [id]) 
+}
+
+model Progress {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  bookId        Int?     
+  chapterId     Int?     
+  audioBookId   Int?      
+  episodeId     Int?      
+  lastAccessed  DateTime  @default(now()) 
+  user          User      @relation(fields: [userId], references: [id])
+  book          Book?     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  chapter       Chapter?  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  audioBook     AudioBook? @relation(fields: [audioBookId], references: [id], onDelete: Cascade)
+  episode       Episodes? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  @@unique([userId, bookId]) 
+  @@unique([userId, audioBookId])
 }

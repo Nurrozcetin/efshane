@@ -194,6 +194,54 @@ export class BookCaseService {
             lastReadBook ? { ...lastReadBook, type: 'book' } : null,
             lastListenAudioBook ? { ...lastListenAudioBook, type: 'audioBook' } : null,
         ].filter(Boolean);
-        return allBooks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]; // En yeni olanı döndür.
+        return allBooks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
     }
+
+    async getBooks(authorId: number) {
+        const books = await this.prisma.bookCase.findMany({
+            where: {
+                userId: authorId,
+            },
+            select: {
+                book: {
+                    select: {
+                        id: true,
+                        title: true,
+                        bookCover: true,
+                    },
+                },
+            },
+        });
+    
+        const audioBooks = await this.prisma.audioBookCase.findMany({
+            where: {
+                userId: authorId,
+            },
+            select: {
+                audioBooks: {
+                    select: {
+                        id: true,
+                        title: true,
+                        bookCover: true,
+                    },
+                },
+            },
+        });
+    
+        const formattedBooks = books.map((bookWrapper) => ({
+            ...bookWrapper.book,
+            type: 'book', 
+        }));
+    
+        const formattedAudioBooks = audioBooks.map((audioBookWrapper) => ({
+            ...audioBookWrapper.audioBooks,
+            type: 'audioBook', 
+        }));
+    
+        const allItems = [...formattedBooks, ...formattedAudioBooks];
+        console.log('allItems:', allItems);
+    
+        return allItems;
+    }
+    
 }

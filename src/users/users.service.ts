@@ -76,7 +76,6 @@ export class UserService {
   }
 
   async getMyProfile(userId: number) {
-    //const baseUrl = 'http://localhost:5173'; 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -98,8 +97,6 @@ export class UserService {
     const defaultProfileImage = '/images/user.jpeg';
     const formattedUser = {
       ...user,
-      //image_background: `${baseUrl}/${user.image_background}`,
-      //profile_image: `${baseUrl}/${user.profile_image}`,
       image_background: user.image_background || '',
       profile_image: user.profile_image || defaultProfileImage,
       followersCount: user?._count?.followers || 0,
@@ -139,7 +136,6 @@ export class UserService {
   }
 
   async getProfileByUsername(username: string) {
-    const baseUrl = 'http://localhost:5173'; 
     const user = await this.prisma.user.findUnique({
       where: { username },
       select: {
@@ -159,8 +155,8 @@ export class UserService {
     });
     const formattedUser = {
       ...user,
-      image_background: `${baseUrl}/${user.image_background}`,
-      profile_image: `${baseUrl}/${user.profile_image}`,
+      image_background: user.image_background || '',
+      profile_image: user.profile_image || '',
       followersCount: user?._count?.followers || 0,
       followingCount: user?._count?.following || 0,
     };

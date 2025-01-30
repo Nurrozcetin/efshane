@@ -14,7 +14,7 @@ export class MailerService {
             service: 'gmail',
             auth: {
                 user: "efshaneapp@gmail.com",
-                pass: "xalo smjn llpe bjgz"
+                pass: "yjkq yufp vxlj payb"
             },
         });
     }
@@ -75,11 +75,12 @@ export class MailerService {
     async sendContactMail(contactUsDto: ContactUsDto) {
         const { email, title, description } = contactUsDto;
         const mailOptions = {
-            from: email,
-            to: `efshaneapp@gmail.com`,
+            from: `"${email}" <efshaneapp@gmail.com>`,
+            to: "efshaneapp@gmail.com", 
             subject: `Bize Ulaşın - ${title}`,
-            text: description
-        }
+            text: description,
+            replyTo: email
+        };
         try {
             const info = await this.transporter.sendMail(mailOptions);
         } catch (error) {

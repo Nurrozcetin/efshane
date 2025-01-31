@@ -1,3 +1,4 @@
+import { NotificationsGateway } from './../notification/notification.gateway';
 import { BookService } from './book.service';
 import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
 import { JwtAuthGuard } from "src/auth/guards/jwt.guards";
@@ -5,6 +6,7 @@ import { UpdateBookDto } from './dto/update-book.dto';
 import { CreateBookDto } from './dto/create-book.dto';
 import { diskStorage } from 'multer';
 import { FileInterceptor } from '@nestjs/platform-express'
+import { PrismaService } from 'prisma/prisma.service';
 
 const storage = diskStorage({
     destination: './uploads', 
@@ -17,7 +19,11 @@ const storage = diskStorage({
 
 @Controller('book')
 export class  BookController {
-    constructor(private readonly bookService: BookService) {}
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly bookService: BookService,
+        private readonly notificationGateway: NotificationsGateway
+    ) {}
     @Get('search')
     async search(
         @Query('query') query: string,  
@@ -44,6 +50,34 @@ export class  BookController {
         const authorId = req.user.id;
         const decodedTitle = decodeURIComponent(bookTitle);
         const book = await this.bookService.togglePublish(decodedTitle, authorId);
+
+        if (book.publish) {
+            const followers = await this.prisma.following.findMany({
+                where: { followersId: authorId },
+                select: { followingId: true },
+            });
+    
+            for (const follower of followers) {
+                const notificationData = {
+                    message: `"${book.title}" kitabı yayınlandı. Okumaya ne dersin?`,
+                    bookTitle: book.title,
+                    bookId: book.id, 
+                    authorUsername: req.user.username, 
+                    authorProfileImage: req.user.profile_image || 'default-book-cover.jpg' 
+                };
+    
+                this.notificationGateway.sendNotificationToUser(follower.followingId, notificationData);
+    
+                await this.prisma.notification.create({
+                    data: {
+                        userId: follower.followingId, 
+                        authorId: authorId, 
+                        message: notificationData.message,
+                    },
+                });
+            }
+        }
+
         return book;
     }
 

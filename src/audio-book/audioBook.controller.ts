@@ -5,6 +5,8 @@ import { CreateAudioBookDto } from "./dto/create-audioBook.dto";
 import { UpdateAudioBookDto } from "./dto/update-audiobook.dto";
 import { diskStorage } from "multer";
 import { FileInterceptor } from "@nestjs/platform-express";
+import { PrismaService } from "prisma/prisma.service";
+import { NotificationsGateway } from "src/notification/notification.gateway";
 
 const storage = diskStorage({
     destination: './uploads', 
@@ -16,7 +18,11 @@ const storage = diskStorage({
 });
 @Controller('audio-book')
 export class  AudioBookController {
-    constructor(private readonly audioBookService: AudioBookService) {}
+    constructor(
+        private readonly audioBookService: AudioBookService,
+        private readonly prisma: PrismaService,
+        private readonly notificationGateway: NotificationsGateway
+    ) {}
 
     @UseGuards(JwtAuthGuard)
     @Post()
@@ -119,6 +125,33 @@ export class  AudioBookController {
         const authorId = req.user.id;
         const decodedTitle = decodeURIComponent(bookTitle);
         const audioBook = await this.audioBookService.togglePublish(decodedTitle, authorId);
+
+        if (audioBook.publish) {
+            const followers = await this.prisma.following.findMany({
+                where: { followersId: authorId },
+                select: { followingId: true },
+            });
+    
+            for (const follower of followers) {
+                const notificationData = {
+                    message: `"${audioBook.title}" sesli kitabı yayınlandı. Dinlemeye ne dersin?`,
+                    bookTitle: audioBook.title,
+                    bookId: audioBook.id, 
+                    authorUsername: req.user.username, 
+                    authorProfileImage: req.user.profile_image || 'default-book-cover.jpg' 
+                };
+    
+                this.notificationGateway.sendNotificationToUser(follower.followingId, notificationData);
+    
+                await this.prisma.notification.create({
+                    data: {
+                        userId: follower.followingId, 
+                        authorId: authorId, 
+                        message: notificationData.message,
+                    },
+                });
+            }
+        }
         return audioBook;
     }
 

@@ -32,7 +32,8 @@ model User {
   audioBookCase     AudioBookCase[]
   listeningList     ListeningList[]
   comment           Comments[]
-  notification      Notification[]
+  author            Notification[] @relation("author") 
+  user              Notification[] @relation("user")  
   episodes          Episodes[]
   category          UserCategory[]
   visible           MessageVisibility[]
@@ -350,7 +351,9 @@ model Notification {
   id          Int       @default(autoincrement()) @id
   message     String
   userId      Int       
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User      @relation("user", fields: [userId], references: [id])
+  authorId    Int       
+  author      User      @relation("author", fields: [authorId], references: [id])
   isRead      Boolean   @default(false)  
   createdAt   DateTime  @default(now())  
 }

@@ -21,6 +21,12 @@ export class NotifyService{
                         username: true,
                         profile_image: true,
                     }
+                },
+                author: { 
+                    select: {
+                        username: true,
+                        profile_image: true,
+                    }
                 }
             }
         });

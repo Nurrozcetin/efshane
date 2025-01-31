@@ -10,37 +10,37 @@ export class AnnouncementService {
         private readonly notificationsGateway: NotificationsGateway,
     ) {}
 
-    async createAnnouncement(createAnnouncementDto: CreateAnnouncementDto, authorId: number) {
-        const {content } = createAnnouncementDto;
+    // async createAnnouncement(createAnnouncementDto: CreateAnnouncementDto, authorId: number) {
+    //     const {content } = createAnnouncementDto;
 
-        const announcement = await this.prisma.announcement.create({
-            data: {
-                content,
-                authorId,
-            },
-        });
+    //     const announcement = await this.prisma.announcement.create({
+    //         data: {
+    //             content,
+    //             authorId,
+    //         },
+    //     });
 
-        const followers = await this.prisma.following.findMany({
-            where: { followingId: authorId },
-            select: { followersId: true },
-        });
+    //     const followers = await this.prisma.following.findMany({
+    //         where: { followingId: authorId },
+    //         select: { followersId: true },
+    //     });
 
-        for (const follower of followers) {
-            const createdNotification = await this.prisma.notification.create({
-                data: {
-                    userId: follower.followersId,
-                    message: `Yeni duyuru: ${content}`,
-                },
-            });
+    //     for (const follower of followers) {
+    //         const createdNotification = await this.prisma.notification.create({
+    //             data: {
+    //                 userId: follower.followersId,
+    //                 message: `Yeni duyuru: ${content}`,
+    //             },
+    //         });
             
-            this.notificationsGateway.sendNotificationToUser(follower.followersId, {
-                id: createdNotification.id,
-                message: createdNotification.message,
-                createdAt: createdNotification.createdAt,
-            });
-        }
-        return announcement;
-    }
+    //         this.notificationsGateway.sendNotificationToUser(follower.followersId, {
+    //             id: createdNotification.id,
+    //             message: createdNotification.message,
+    //             createdAt: createdNotification.createdAt,
+    //         });
+    //     }
+    //     return announcement;
+    // }
 
     async getAllNAnnonsByAuthorId(authorId: number){
         const anons = await this.prisma.announcement.findMany({

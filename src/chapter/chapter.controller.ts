@@ -5,6 +5,8 @@ import { CreateChapterDto } from "./dto/create-chapter.dto";
 import { UpdateChapterDto } from "./dto/update-chapter.dto";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
+import { PrismaService } from "prisma/prisma.service";
+import { NotificationsGateway } from "src/notification/notification.gateway";
 
 const storage = diskStorage({
     destination: './uploads', 
@@ -16,7 +18,11 @@ const storage = diskStorage({
 });
 @Controller('chapter')
 export class ChapterController {
-    constructor(private readonly chapterService: ChapterService) {}
+    constructor(
+        private readonly chapterService: ChapterService,
+        private readonly prisma: PrismaService,
+        private readonly notificationGateway: NotificationsGateway
+    ) {}
 
     @UseGuards(JwtAuthGuard)
     @Get('get/:bookTitle/:chapterTitle')
@@ -97,6 +103,35 @@ export class ChapterController {
         const decodedTitle = decodeURIComponent(bookTitle);
         const decodedChapterTitle = decodeURIComponent(title);
         const chapter = await this.chapterService.togglePublishChapter(decodedTitle, decodedChapterTitle, authorId);
+
+        if (chapter.publish) {
+            const followers = await this.prisma.following.findMany({
+                where: { followersId: authorId },
+                select: { followingId: true },
+            });
+    
+            for (const follower of followers) {
+                const notificationData = {
+                    message: `"${decodedTitle}" kitabının "${chapter.title}" bölümü yayınlandı. Okumaya ne dersin? 📖`,
+                    bookTitle: decodedTitle, 
+                    chapterTitle: chapter.title, 
+                    chapterId: chapter.id, 
+                    authorUsername: req.user.username, 
+                    authorProfileImage: req.user.profile_image || 'default-book-cover.jpg' // Yazarın profil resmi
+                };
+    
+                this.notificationGateway.sendNotificationToUser(follower.followingId, notificationData);
+    
+                await this.prisma.notification.create({
+                    data: {
+                        userId: follower.followingId, 
+                        authorId: authorId, 
+                        message: notificationData.message,
+                    },
+                });
+            }
+        }
+
         return chapter;
     }
 

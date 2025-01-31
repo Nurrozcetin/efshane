@@ -821,7 +821,7 @@ export class EpisodeService {
 
         const updatedEpisode = await this.prisma.episodes.update({
             where: {
-                id: userBook.id,
+                id: existingEpisode.id,
             },
             data: {
                 publish: !existingEpisode.publish, 

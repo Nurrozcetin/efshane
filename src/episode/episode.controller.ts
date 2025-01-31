@@ -7,10 +7,16 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { FileFieldsInterceptor, FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from "multer";
+import { NotificationsGateway } from "src/notification/notification.gateway";
+import { PrismaService } from "prisma/prisma.service";
 
 @Controller('episode')
 export class EpisodeController {
-    constructor(private readonly episodeService: EpisodeService) {}
+    constructor(
+        private readonly episodeService: EpisodeService,
+        private readonly prisma: PrismaService,
+        private readonly notificationsGateway: NotificationsGateway,    
+    ) {}
 
     @Post('upload')
     @UseInterceptors(
@@ -233,8 +239,37 @@ export class EpisodeController {
         const authorId = req.user.id;
         const decodedTitle = decodeURIComponent(bookTitle);
         const decodedEpisodeTitle = decodeURIComponent(title);
-        const book = await this.episodeService.togglePublish(decodedTitle, decodedEpisodeTitle, authorId);
-        return book;
+        const episode = await this.episodeService.togglePublish(decodedTitle, decodedEpisodeTitle, authorId);
+        
+        if (episode.publish) {
+            const followers = await this.prisma.following.findMany({
+                where: { followersId: authorId },
+                select: { followingId: true },
+            });
+    
+            for (const follower of followers) {
+                const notificationData = {
+                    message: `${decodedTitle}" sesli kitabının "${episode.title}" bölümü yayınlandı. Dinlemeye ne dersin?🎧 `,
+                    bookTitle: decodedTitle, 
+                    episodeTitle: episode.title,
+                    episodeId: episode.id, 
+                    authorUsername: req.user.username, 
+                    authorProfileImage: req.user.profile_image || 'default-book-cover.jpg' 
+                };
+    
+                this.notificationsGateway.sendNotificationToUser(follower.followingId, notificationData);
+    
+                await this.prisma.notification.create({
+                    data: {
+                        userId: follower.followingId, 
+                        authorId: authorId, 
+                        message: notificationData.message,
+                    },
+                });
+            }
+        }
+
+        return episode;
     }
 
     @UseGuards(JwtAuthGuard)

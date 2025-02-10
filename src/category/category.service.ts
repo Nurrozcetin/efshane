@@ -178,7 +178,8 @@ export class CategoryService {
                                             select: {
                                                 read_count: true
                                             }
-                                        }
+                                        },
+                                        publish: true
                                     }
                                 }
                             }
@@ -214,7 +215,8 @@ export class CategoryService {
                                             select: {
                                                 read_count: true
                                             }
-                                        }
+                                        },
+                                        publish: true
                                     }
                                 }
                             }
@@ -232,7 +234,8 @@ export class CategoryService {
                 bookCover: book.book.bookCover,
                 readCount: book.book.analysis.reduce((acc, item) => acc + (item.read_count || 0), 0),
                 username: book.book.user.username,
-                profile_image: book.book.user.profile_image
+                profile_image: book.book.user.profile_image,
+                publish: book.book.publish
             }))
         );
 
@@ -245,6 +248,7 @@ export class CategoryService {
                 readCount: audioBook.audioBook.analysis.reduce((acc, item) => acc + (item.read_count || 0), 0),
                 username: audioBook.audioBook.user.username,
                 profile_image: audioBook.audioBook.user.profile_image,
+                publish: audioBook.audioBook.publish
             }))
         );
         

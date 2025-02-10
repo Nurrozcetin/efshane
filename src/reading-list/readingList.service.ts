@@ -32,7 +32,6 @@ export class ReadingListService {
                     bookId: parseInt(bookId),
                 },
             });
-            console.log("asmögasç");
             return { message: 'Kitap okuma listesine eklendi.' };
 
         } catch (error) {

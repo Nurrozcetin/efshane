@@ -21,7 +21,6 @@ export class NotifyController{
     async deleteNotification(
         @Param('notifyId') notifyId: string,
     ) {
-        console.log(notifyId);
         return this.notifyService.deleteNotification(notifyId);
     }
 }

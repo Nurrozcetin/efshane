@@ -28,6 +28,7 @@ export class AuthController {
           throw new UnauthorizedException('User not found');
       }
       const {accessToken} = await this.authService.login(req.user);
+      console.log(accessToken);
       return { accessToken };
   }
 

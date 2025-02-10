@@ -8,7 +8,6 @@ export class HelpService {
     private readonly apiKey = process.env['GITHUB_TOKEN'];
 
     async getChatResponse(userInput: string, currentContent: string): Promise<string> {
-        console.log("chat response");
         try {
             const response = await axios.post(
                 `${this.endpoint}/chat/completions`,
@@ -41,7 +40,6 @@ export class HelpService {
                 },
                 },
             );
-            console.log("response", response.data.choices[0].message.content);
             return response.data.choices[0].message.content;
         } catch (error) {
             throw new HttpException(

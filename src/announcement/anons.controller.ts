@@ -9,15 +9,15 @@ export class AnnouncementController {
         private readonly announcementService: AnnouncementService
     ){}
 
-    // @UseGuards(JwtAuthGuard)
-    // @Post('create')
-    // async createAnnouncement(
-    // @Body() body: CreateAnnouncementDto,
-    // @Req() req) 
-    // {
-    //     const authorId = req.user.id; 
-    //     return this.announcementService.createAnnouncement(body, authorId);
-    // }
+    @UseGuards(JwtAuthGuard)
+    @Post('create')
+    async createAnnouncement(
+    @Body() body: CreateAnnouncementDto,
+    @Req() req) 
+    {
+        const authorId = req.user.id; 
+        return this.announcementService.createAnnouncement(body, authorId);
+    }
 
     @UseGuards(JwtAuthGuard)
     @Get('allAnons')

@@ -5,9 +5,7 @@ import { UpdatePasswordDto } from "./dto/change-pass.dto";
 import { JwtAuthGuard } from "src/auth/guards/jwt.guards";
 import { UpdateUserDto } from './dto/update-user.dto';
 import { diskStorage } from 'multer';
-import { FileFieldsInterceptor, FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
-import * as fs from "fs";
-import * as path from "path";
+import { FileFieldsInterceptor} from "@nestjs/platform-express";
 
 const storage = diskStorage({
     destination: './uploads', 

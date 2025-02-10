@@ -348,14 +348,17 @@ model AudioBookCategory {
 }
 
 model Notification {
-  id          Int       @default(autoincrement()) @id
-  message     String
-  userId      Int       
-  user        User      @relation("user", fields: [userId], references: [id])
-  authorId    Int       
-  author      User      @relation("author", fields: [authorId], references: [id])
-  isRead      Boolean   @default(false)  
-  createdAt   DateTime  @default(now())  
+  id            Int       @default(autoincrement()) @id
+  message       String?
+  userId        Int       
+  user          User      @relation("user", fields: [userId], references: [id])
+  authorId      Int       
+  author        User      @relation("author", fields: [authorId], references: [id])
+  bookTitle     String? 
+  chapterTitle  String?
+  isAudioBook   Boolean?
+  isRead        Boolean   @default(false)  
+  createdAt     DateTime  @default(now())  
 }
 model BookCase { 
   id            Int          @id @default(autoincrement())

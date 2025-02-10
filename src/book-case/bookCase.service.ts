@@ -86,7 +86,6 @@ export class BookCaseService {
                 throw new BadRequestException("Title parameter is required.");
             }
 
-            console.log('decodedAudioBookTitle:', decodedAudioBookTitle);
             const audioBook = await this.prisma.audioBook.findFirst({
                 where: {
                     OR: [
@@ -239,7 +238,6 @@ export class BookCaseService {
         }));
     
         const allItems = [...formattedBooks, ...formattedAudioBooks];
-        console.log('allItems:', allItems);
     
         return allItems;
     }

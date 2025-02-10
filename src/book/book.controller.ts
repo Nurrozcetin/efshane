@@ -44,41 +44,11 @@ export class  BookController {
     @Put('toggle/:bookTitle')
     async togglePublish(
         @Param('bookTitle') bookTitle: string, 
-        @Req() req
+        @Req() req: any
     ){
-
         const authorId = req.user.id;
         const decodedTitle = decodeURIComponent(bookTitle);
-        const book = await this.bookService.togglePublish(decodedTitle, authorId);
-
-        if (book.publish) {
-            const followers = await this.prisma.following.findMany({
-                where: { followersId: authorId },
-                select: { followingId: true },
-            });
-    
-            for (const follower of followers) {
-                const notificationData = {
-                    message: `"${book.title}" kitabı yayınlandı. Okumaya ne dersin?`,
-                    bookTitle: book.title,
-                    bookId: book.id, 
-                    authorUsername: req.user.username, 
-                    authorProfileImage: req.user.profile_image || 'default-book-cover.jpg' 
-                };
-    
-                this.notificationGateway.sendNotificationToUser(follower.followingId, notificationData);
-    
-                await this.prisma.notification.create({
-                    data: {
-                        userId: follower.followingId, 
-                        authorId: authorId, 
-                        message: notificationData.message,
-                    },
-                });
-            }
-        }
-
-        return book;
+        return await this.bookService.togglePublishWithNotifications(decodedTitle, authorId);
     }
 
     @UseGuards(JwtAuthGuard)

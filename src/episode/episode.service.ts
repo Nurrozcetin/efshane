@@ -7,14 +7,15 @@ import * as path from 'path';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import * as os from 'os';
+import { NotificationsGateway } from "src/notification/notification.gateway";
 @Injectable()
 export class EpisodeService {
     constructor(
-        private readonly prisma: PrismaService
+        private readonly prisma: PrismaService,
+        private readonly notificationGateway: NotificationsGateway,
     ) {}
 
     async getAllEpisodesByAudioBookTitle(authorId: number, decodedTitle: string) {
-        console.log(decodedTitle);
         const normalizeTitle = (title: string) => {
             return title
                 .toLowerCase() 
@@ -32,7 +33,6 @@ export class EpisodeService {
         };
     
         const decodedNormalizedTitle = normalizeTitle(decodedTitle);
-        console.log(decodedNormalizedTitle);
         
         if (!decodedTitle) {
             throw new BadRequestException("Title parameter is required.");
@@ -47,10 +47,8 @@ export class EpisodeService {
                 userId: authorId,
             },
         });
-        
-        console.log("Prisma Query Result:", audioBooks);
+
         const userBook = audioBooks.find(audioBook => audioBook.userId === authorId);
-        console.log(userBook);
     
         if (!userBook) {
             throw new NotFoundException("This audio book does not exist. Please enter the correct title.");
@@ -307,7 +305,6 @@ export class EpisodeService {
         episodeDto: CreateEpisodeDto,
         userId: number,
     ) {
-        console.log("service");
         const { title, audioFile, textFile, duration, publish, image } = episodeDto;
     
         const normalizeTitle = (title: string) => {
@@ -343,7 +340,6 @@ export class EpisodeService {
         });
     
         const userBook = audioBooks.find(audioBook => audioBook.userId === userId);
-        console.log("userBook:", userBook);
     
         if (!userBook) {
             throw new NotFoundException("This audio book does not exist. Please enter the correct title.");
@@ -369,7 +365,6 @@ export class EpisodeService {
 
         if (audioFile) {
             const fileUrl = `http://localhost:3000${audioFile}`;
-            console.log("Audio File URL:", fileUrl);
         
             try {
                 const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
@@ -377,7 +372,6 @@ export class EpisodeService {
         
                 const tempFilePath = path.join(os.tmpdir(), `temp_${uuidv4()}.wav`);
                 fs.writeFileSync(tempFilePath, fileContent);
-                console.log("Temp File Path:", tempFilePath);
         
                 const content = await this.transcribeAudioFile(tempFilePath);
         
@@ -393,7 +387,6 @@ export class EpisodeService {
 
         if (textFile) {
             const fileUrl = `http://localhost:3000${textFile}`;
-            console.log("Text File URL:", fileUrl);
         
             try {
                 const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
@@ -401,7 +394,6 @@ export class EpisodeService {
 
                 const tempFilePath = path.join(os.tmpdir(), `temp_${uuidv4()}.txt`);
                 fs.writeFileSync(tempFilePath, fileContent);
-                console.log("Temp File Path:", tempFilePath);
         
                 const contentCheckResult = await this.readTextFile(tempFilePath);
         
@@ -434,7 +426,6 @@ export class EpisodeService {
                 publish_date: new Date(),
             },
         });      
-        console.log("Episode:", episode);
 
         const bookDuration = userBook.duration || '00:00:00';
         const [bookHours, bookMinutes, bookSeconds] = bookDuration.split(':').map(Number);
@@ -469,13 +460,11 @@ export class EpisodeService {
             audioFile: fs.createReadStream(audioFilePath) 
         }, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 1200000 });
 
-        console.log("Transcription Result:", transcribe.data);
         
         const analyze = await axios.post('https://7ad7-34-46-82-119.ngrok-free.app/analyze', {
             text: transcribe.data.transcription,
         }, { timeout: 90000 });
         
-        console.log("Analyze Result:", analyze.data);
 
         if (analyze.data.is_offensive) {
             return { offensive: true };
@@ -485,11 +474,9 @@ export class EpisodeService {
     }
 
     private async readTextFile(filePath: string): Promise<{ offensive: boolean, audioFilePath?: string }> {
-        console.log("Reading Text File:", filePath);
     
         try {
             const content = await fs.promises.readFile(filePath, 'utf8');
-            console.log("File content read successfully");
 
             try {
                 const analyzeResponse = await axios.post(
@@ -515,7 +502,6 @@ export class EpisodeService {
                 throw new Error('Invalid response from text_to_speech API.');
             }
     
-            console.log("Text-to-speech conversion successful:", text_to_speech.data.filePath);
             return { offensive: false, audioFilePath: text_to_speech.data.filePath };
     
         } catch (error) {
@@ -830,6 +816,49 @@ export class EpisodeService {
     
         return updatedEpisode;
     }  
+
+    async togglePublishWithNotifications(decodedTitle: string, decodedEpisodeTitle: string, userId: number) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                username: true,
+                profile_image: true,
+            }
+        });
+        const updatedChapter = await this.togglePublish(decodedTitle, decodedEpisodeTitle, userId);
+    
+        if (updatedChapter.publish) {
+            const followers = await this.prisma.following.findMany({
+                where: { followersId: userId },
+                select: { followingId: true },
+            });
+
+            for (const follower of followers) {
+                const notificationData = {
+                    message: `"${decodedTitle}" kitabının "${updatedChapter.title}" bölümü yayınlandı. Dinlemeye ne dersin?🎧`,
+                    bookTitle: decodedTitle, 
+                    chapterTitle: updatedChapter.title, 
+                    chapterId: updatedChapter.id, 
+                    authorUsername: user.username, 
+                    authorProfileImage: user.profile_image || 'default-book-cover.jpg', 
+                    isAudioBook: true,
+                };
+    
+                this.notificationGateway.sendNotificationToUser(follower.followingId, notificationData);
+    
+                await this.prisma.notification.create({
+                    data: {
+                        userId: follower.followingId, 
+                        authorId: userId, 
+                        bookTitle: decodedTitle,
+                        chapterTitle: updatedChapter.title,
+                        isAudioBook: true,
+                    },
+                });
+            }
+        }
+        return updatedChapter;
+    }
 
     async deleteChapter(
         decodedTitle: string,

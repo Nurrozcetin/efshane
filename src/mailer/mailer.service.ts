@@ -52,14 +52,10 @@ export class MailerService {
 
     async verifyCode(email: string, enteredCode: string): Promise<boolean> {
         const storedCodeData = this.verificationCodes.get(email); 
-        console.log(storedCodeData);
         
         if (!storedCodeData) {
             throw new Error('Doğrulama kodu bulunamadı.');
         }
-
-        console.log('Saklanan Kod:', storedCodeData.code);
-        console.log('Girilen Kod:', enteredCode);
 
         if (new Date() > storedCodeData.expiresAt) {
             throw new Error('Doğrulama kodunun süresi dolmuş.');

@@ -55,7 +55,7 @@ import { join } from 'path';
 import { HelpService } from './help/help.service';
 import { HelpController } from './help/help.controller';
 import { HelpModule } from './help/help.module';
-import {MemoryStoredFile, NestjsFormDataModule } from 'nestjs-form-data';
+import { NestjsFormDataModule } from 'nestjs-form-data';
 import { FeedModule } from './feed/feed.module';
 import { FeedService } from './feed/feed.service';
 import { NotificationsGateway } from './notification/notification.gateway';

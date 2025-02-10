@@ -124,35 +124,7 @@ export class  AudioBookController {
 
         const authorId = req.user.id;
         const decodedTitle = decodeURIComponent(bookTitle);
-        const audioBook = await this.audioBookService.togglePublish(decodedTitle, authorId);
-
-        if (audioBook.publish) {
-            const followers = await this.prisma.following.findMany({
-                where: { followersId: authorId },
-                select: { followingId: true },
-            });
-    
-            for (const follower of followers) {
-                const notificationData = {
-                    message: `"${audioBook.title}" sesli kitabı yayınlandı. Dinlemeye ne dersin?`,
-                    bookTitle: audioBook.title,
-                    bookId: audioBook.id, 
-                    authorUsername: req.user.username, 
-                    authorProfileImage: req.user.profile_image || 'default-book-cover.jpg' 
-                };
-    
-                this.notificationGateway.sendNotificationToUser(follower.followingId, notificationData);
-    
-                await this.prisma.notification.create({
-                    data: {
-                        userId: follower.followingId, 
-                        authorId: authorId, 
-                        message: notificationData.message,
-                    },
-                });
-            }
-        }
-        return audioBook;
+        return await this.audioBookService.togglePublishWithNotifications(decodedTitle, authorId);
     }
 
     @UseGuards(JwtAuthGuard)

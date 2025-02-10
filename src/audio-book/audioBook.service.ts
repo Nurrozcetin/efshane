@@ -3,11 +3,13 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { PrismaService } from "prisma/prisma.service";
 import { CreateAudioBookDto } from "./dto/create-audioBook.dto";
 import { UpdateAudioBookDto } from './dto/update-audiobook.dto';
+import { NotificationsGateway } from 'src/notification/notification.gateway';
 
 @Injectable()
 export class AudioBookService{
     constructor(
         private readonly prisma: PrismaService,
+        private readonly notificationGateway: NotificationsGateway,
     ) {}
     async createAudioBook(
         audioBookDto: CreateAudioBookDto,
@@ -162,7 +164,6 @@ export class AudioBookService{
         }
     }
 
-
     async getAudioBookForHome(decodedTitle: string, userId: number) {
         try {
             if (!decodedTitle) {
@@ -273,7 +274,6 @@ export class AudioBookService{
                 },
             });  
 
-            console.log(audioBooks);
             return audioBooks.map((book) => {
                 const isInListeningList = book.listeningList.some(listening => listening.user.id === userId);
                 const isAudioBookCase = book.audioBookCase.some(bookCase => bookCase.user.id === userId);
@@ -668,6 +668,48 @@ export class AudioBookService{
     
         return updatedBook;
     }  
+
+    async togglePublishWithNotifications(decodedTitle: string, userId: number) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                username: true,
+                profile_image: true,
+            }
+        });
+        const updatedBook = await this.togglePublish(decodedTitle, userId);
+    
+        if (updatedBook.publish) {
+            const followers = await this.prisma.following.findMany({
+                where: { followersId: userId },
+                select: { followingId: true },
+            });
+    
+            for (const follower of followers) {
+                const notificationData = {
+                    message: `${updatedBook.title}`,
+                    bookTitle: updatedBook.title,
+                    bookId: updatedBook.id, 
+                    authorUsername: user.username, 
+                    authorProfileImage: user.profile_image,
+                    isAudioBook: true,
+                };
+    
+                this.notificationGateway.sendNotificationToUser(follower.followingId, notificationData);
+    
+                await this.prisma.notification.create({
+                    data: {
+                        userId: follower.followingId, 
+                        authorId: userId, 
+                        bookTitle: updatedBook.title,  
+                        isAudioBook: true,     
+                    },
+                });
+            }
+        }
+    
+        return updatedBook;
+    }
 
     async toggleLikeAudioBook(decodedTitle: string, userId: number) {
         try {

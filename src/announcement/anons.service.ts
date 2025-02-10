@@ -10,38 +10,50 @@ export class AnnouncementService {
         private readonly notificationsGateway: NotificationsGateway,
     ) {}
 
-    // async createAnnouncement(createAnnouncementDto: CreateAnnouncementDto, authorId: number) {
-    //     const {content } = createAnnouncementDto;
-
-    //     const announcement = await this.prisma.announcement.create({
-    //         data: {
-    //             content,
-    //             authorId,
-    //         },
-    //     });
-
-    //     const followers = await this.prisma.following.findMany({
-    //         where: { followingId: authorId },
-    //         select: { followersId: true },
-    //     });
-
-    //     for (const follower of followers) {
-    //         const createdNotification = await this.prisma.notification.create({
-    //             data: {
-    //                 userId: follower.followersId,
-    //                 message: `Yeni duyuru: ${content}`,
-    //             },
-    //         });
-            
-    //         this.notificationsGateway.sendNotificationToUser(follower.followersId, {
-    //             id: createdNotification.id,
-    //             message: createdNotification.message,
-    //             createdAt: createdNotification.createdAt,
-    //         });
-    //     }
-    //     return announcement;
-    // }
-
+    async createAnnouncement(createAnnouncementDto: CreateAnnouncementDto, authorId: number) {
+        const { content } = createAnnouncementDto;
+    
+        const announcement = await this.prisma.announcement.create({
+            data: {
+                content,
+                authorId,
+            },
+        });
+    
+        const followers = await this.prisma.following.findMany({
+            where: { followingId: authorId },  
+            select: { followersId: true },
+        });
+    
+        const author = await this.prisma.user.findUnique({
+            where: { id: authorId },
+            select: {
+                username: true,
+                profile_image: true,
+            }
+        });
+    
+        for (const follower of followers) {
+            const notificationData = {
+                message: `${content}`,
+                authorUsername: author.username,
+                authorProfileImage: author.profile_image || 'default-profile.jpg'
+            };
+    
+            this.notificationsGateway.sendNotificationToUser(follower.followersId, notificationData);
+    
+            await this.prisma.notification.create({
+                data: {
+                    userId: follower.followersId,
+                    authorId: authorId,
+                    message: notificationData.message,
+                },
+            });
+        }
+    
+        return announcement;
+    }
+    
     async getAllNAnnonsByAuthorId(authorId: number){
         const anons = await this.prisma.announcement.findMany({
             where:{

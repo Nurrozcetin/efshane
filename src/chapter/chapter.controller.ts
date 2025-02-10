@@ -102,37 +102,7 @@ export class ChapterController {
         const authorId = req.user.id;
         const decodedTitle = decodeURIComponent(bookTitle);
         const decodedChapterTitle = decodeURIComponent(title);
-        const chapter = await this.chapterService.togglePublishChapter(decodedTitle, decodedChapterTitle, authorId);
-
-        if (chapter.publish) {
-            const followers = await this.prisma.following.findMany({
-                where: { followersId: authorId },
-                select: { followingId: true },
-            });
-    
-            for (const follower of followers) {
-                const notificationData = {
-                    message: `"${decodedTitle}" kitabının "${chapter.title}" bölümü yayınlandı. Okumaya ne dersin? 📖`,
-                    bookTitle: decodedTitle, 
-                    chapterTitle: chapter.title, 
-                    chapterId: chapter.id, 
-                    authorUsername: req.user.username, 
-                    authorProfileImage: req.user.profile_image || 'default-book-cover.jpg' // Yazarın profil resmi
-                };
-    
-                this.notificationGateway.sendNotificationToUser(follower.followingId, notificationData);
-    
-                await this.prisma.notification.create({
-                    data: {
-                        userId: follower.followingId, 
-                        authorId: authorId, 
-                        message: notificationData.message,
-                    },
-                });
-            }
-        }
-
-        return chapter;
+        return await this.chapterService.togglePublishWithNotifications(decodedTitle, decodedChapterTitle, authorId);
     }
 
     @UseGuards(JwtAuthGuard)

@@ -3,10 +3,14 @@ import { PrismaService } from "prisma/prisma.service";
 import { CreateChapterDto } from "./dto/create-chapter.dto";
 import { UpdateChapterDto } from "./dto/update-chapter.dto";
 import axios from 'axios';
+import { NotificationsGateway } from "src/notification/notification.gateway";
 
 @Injectable()
 export class ChapterService{
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly notificationGateway: NotificationsGateway,
+    ) {}
     async createChapter(
         decodedTitle: string,
         chapterDto: CreateChapterDto,
@@ -235,6 +239,47 @@ export class ChapterService{
         return updatedChapter;
     }    
     
+    async togglePublishWithNotifications(decodedTitle: string, decodedChapterTitle: string, userId: number) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                username: true,
+                profile_image: true,
+            }
+        });
+        const updatedChapter = await this.togglePublishChapter(decodedTitle, decodedChapterTitle, userId);
+    
+        if (updatedChapter.publish) {
+            const followers = await this.prisma.following.findMany({
+                where: { followersId: userId },
+                select: { followingId: true },
+            });
+    
+            for (const follower of followers) {
+                const notificationData = {
+                    message: `"${decodedTitle}" kitabının "${updatedChapter.title}" bölümü yayınlandı. Okumaya ne dersin? 📖`,
+                    bookTitle: decodedTitle, 
+                    chapterTitle: updatedChapter.title, 
+                    chapterId: updatedChapter.id, 
+                    authorUsername: user.username, 
+                    authorProfileImage: user.profile_image || 'default-book-cover.jpg' 
+                };
+    
+                this.notificationGateway.sendNotificationToUser(follower.followingId, notificationData);
+    
+                await this.prisma.notification.create({
+                    data: {
+                        userId: follower.followingId, 
+                        authorId: userId, 
+                        bookTitle: decodedTitle,
+                        chapterTitle: updatedChapter.title,
+                    },
+                });
+            }
+        }
+        return updatedChapter;
+    }
+
     async getAllChaptersByBookTitle(authorId: number, decodedTitle: string) {
         const normalizeTitle = (title: string) => {
             return title

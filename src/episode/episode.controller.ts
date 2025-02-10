@@ -192,17 +192,14 @@ export class EpisodeController {
     
         if (files.textFile) {
             textPath = `/uploads/audio/${files.textFile[0].filename}`;  
-            console.log(textPath);
         }
 
         if (files.audioFile) {
             audioPath = `/uploads/audio/${files.audioFile[0].filename}`; 
-            console.log(audioPath);
         }
 
         if (files.image) {
             imagePath = `/uploads/audio/${files.image[0].filename}`; 
-            console.log(imagePath);
         }
 
         const episodeData = {
@@ -211,7 +208,6 @@ export class EpisodeController {
             audioFile: audioPath,
             image: imagePath,
         };
-        console.log(episodeData);
         return this.episodeService.publishCreateEpisode(decodedTitle, episodeData, userId);
     }
     
@@ -239,37 +235,7 @@ export class EpisodeController {
         const authorId = req.user.id;
         const decodedTitle = decodeURIComponent(bookTitle);
         const decodedEpisodeTitle = decodeURIComponent(title);
-        const episode = await this.episodeService.togglePublish(decodedTitle, decodedEpisodeTitle, authorId);
-        
-        if (episode.publish) {
-            const followers = await this.prisma.following.findMany({
-                where: { followersId: authorId },
-                select: { followingId: true },
-            });
-    
-            for (const follower of followers) {
-                const notificationData = {
-                    message: `${decodedTitle}" sesli kitabının "${episode.title}" bölümü yayınlandı. Dinlemeye ne dersin?🎧 `,
-                    bookTitle: decodedTitle, 
-                    episodeTitle: episode.title,
-                    episodeId: episode.id, 
-                    authorUsername: req.user.username, 
-                    authorProfileImage: req.user.profile_image || 'default-book-cover.jpg' 
-                };
-    
-                this.notificationsGateway.sendNotificationToUser(follower.followingId, notificationData);
-    
-                await this.prisma.notification.create({
-                    data: {
-                        userId: follower.followingId, 
-                        authorId: authorId, 
-                        message: notificationData.message,
-                    },
-                });
-            }
-        }
-
-        return episode;
+        return await this.episodeService.togglePublishWithNotifications(decodedTitle, decodedEpisodeTitle, authorId);
     }
 
     @UseGuards(JwtAuthGuard)

@@ -2,10 +2,13 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { PrismaService } from "prisma/prisma.service";
 import { CreateBookDto } from "./dto/create-book.dto";
 import { UpdateBookDto } from "./dto/update-book.dto";
+import { NotificationsGateway } from "src/notification/notification.gateway";
+import { publish } from "rxjs";
 @Injectable()
 export class BookService{
     constructor(
         private readonly prisma: PrismaService,
+        private readonly notificationGateway: NotificationsGateway
     ) {}
     async createBook(
         bookDto: CreateBookDto,
@@ -49,7 +52,6 @@ export class BookService{
 
         const decodedNormalizedTitle = normalizeTitle(decodedTitle);      
         
-        console.log(bookDto.isAudioBook); 
         const book = await this.prisma.book.create({
             data: {
                 title,
@@ -324,18 +326,20 @@ export class BookService{
     async search(query: string) {
         const books = await this.prisma.book.findMany({
             where: {
-                    title: { contains: query, mode: 'insensitive' },
-                },
-                select: {
-                    id: true,
-                    title: true,
-                    bookCover: true,
-                    user:{
-                        select: {
-                            username: true,
-                        }
+                publish: true,
+                title: { contains: query, mode: 'insensitive' },
+            },
+            select: {
+                id: true,
+                title: true,
+                bookCover: true,
+                user:{
+                    select: {
+                        username: true,
                     }
-                }
+                },
+                publish: true,
+            }
         });
         const users = await this.prisma.user.findMany({
             where: {
@@ -350,6 +354,7 @@ export class BookService{
         const audioBooks = await this.prisma.audioBook.findMany({
             where: {
                 title: { contains: query, mode: 'insensitive' },
+                publish: true,
             },
             select: {
                 id: true,
@@ -359,7 +364,8 @@ export class BookService{
                     select: {
                         username: true,
                     }
-                }
+                },
+                publish: true,
             }
         })
         return { books, users, audioBooks };
@@ -367,6 +373,9 @@ export class BookService{
 
     async getTrendsBook() {
         const books = await this.prisma.book.findMany({
+            where: {
+                publish: true,
+            },
             select: {
                 id: true,
                 title: true,
@@ -383,6 +392,7 @@ export class BookService{
                         read_count: true,
                     },
                 },
+                publish: true,
             },
         });
     
@@ -402,6 +412,7 @@ export class BookService{
                         read_count: true,
                     },
                 },
+                publish: true,
             },
         });
     
@@ -417,6 +428,7 @@ export class BookService{
             username: book.user.username,
             profile_image: book.user?.profile_image,
             analysis: book.analysis,
+            publish: book.publish,
         }));
     
         const formattedAudioBooks = audioBooks.flatMap((audioBook) => ({
@@ -427,6 +439,7 @@ export class BookService{
             isAudioBook: true,
             profile_image: audioBook.user?.profile_image,
             analysis: audioBook.analysis,
+            publish: audioBook.publish,
         }));
 
         const allBooks = [...formattedBooks, ...formattedAudioBooks];
@@ -444,6 +457,7 @@ export class BookService{
         const currentYear = new Date().getFullYear();
         const books = await this.prisma.book.findMany({
             where: {
+                publish: true,
                 publish_date: {
                     gte: new Date(`${currentYear}-01-01`), 
                     lt: new Date(`${currentYear + 1}-01-01`), 
@@ -460,11 +474,13 @@ export class BookService{
                         profile_image: true,
                     },
                 },
+                publish: true,
             },
         });
     
         const audioBooks = await this.prisma.audioBook.findMany({
             where: {
+                publish: true, 
                 publish_date: {
                     gte: new Date(`${currentYear}-01-01`), 
                     lt: new Date(`${currentYear + 1}-01-01`), 
@@ -481,6 +497,7 @@ export class BookService{
                         profile_image: true,
                     },
                 },
+                publish: true, 
             },
         });
     
@@ -488,6 +505,7 @@ export class BookService{
             id: book.id,
             title: book.title,
             bookCover: book.bookCover,
+            publish: book.publish,
             isAudioBook: false, 
             username: book.user.username,
             profile_image: book.user?.profile_image, 
@@ -499,6 +517,7 @@ export class BookService{
             bookCover: audioBook.bookCover,
             username: audioBook.user.username,
             isAudioBook: true,
+            publish: audioBook.publish,
             profile_image: audioBook.user?.profile_image,
         }));
         const allBooks = [...formattedBooks, ...formattedAudioBooks];
@@ -624,6 +643,58 @@ export class BookService{
     
         return updatedBook;
     }  
+
+    async togglePublishWithNotifications(decodedTitle: string, userId: number) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                username: true,
+                profile_image: true,
+            }
+        });
+        const updatedBook = await this.togglePublish(decodedTitle, userId);
+    
+        if (!updatedBook.publish) {
+            const chapters = await this.prisma.chapter.findMany({
+                where: { bookId: updatedBook.id },
+            });
+    
+            for (const chapter of chapters) {
+                await this.prisma.chapter.update({
+                    where: { id: chapter.id },
+                    data: { publish: false },  
+                });
+            }
+        }
+
+        if (updatedBook.publish) {
+            const followers = await this.prisma.following.findMany({
+                where: { followersId: userId },
+                select: { followingId: true },
+            });
+    
+            for (const follower of followers) {
+                const notificationData = {
+                    message: `${updatedBook.title}`,
+                    bookTitle: updatedBook.title,
+                    bookId: updatedBook.id, 
+                    authorUsername: user.username, 
+                    authorProfileImage: user.profile_image || 'default-book-cover.jpg'
+                };
+    
+                this.notificationGateway.sendNotificationToUser(follower.followingId, notificationData);
+    
+                await this.prisma.notification.create({
+                    data: {
+                        userId: follower.followingId, 
+                        authorId: userId, 
+                        bookTitle: updatedBook.title,       
+                    },
+                });
+            }
+        }
+        return updatedBook;
+    }
 
     async getBookByAuthorUsername(username: string) {
         const baseUrl = 'http://localhost:5173'; 

@@ -15,7 +15,13 @@ export class NotifyService{
             orderBy: {
                 createdAt: 'desc'
             },
-            include: {
+            select: {
+                id: true,
+                createdAt: true,
+                message: true,
+                bookTitle: true, 
+                chapterTitle: true, 
+                isAudioBook: true,
                 user: {
                     select: {
                         username: true,
@@ -27,8 +33,8 @@ export class NotifyService{
                         username: true,
                         profile_image: true,
                     }
-                }
-            }
+                },
+            },
         });
     }
 

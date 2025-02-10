@@ -244,7 +244,6 @@ export class MessageService{
         });
     
         if (!message) {
-            console.log('Mesaj bulunamadı');
             throw new Error('Mesaj bulunamadı');
         }
     

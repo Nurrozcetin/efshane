@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Req, UnauthorizedException, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
 import { UserService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdatePasswordDto } from "./dto/change-pass.dto";
@@ -39,10 +39,25 @@ export class UserController{
     @Get()
     async getProfile(@Req() req) {
         const userId = req.user?.id;
+        console.log('User ID:', userId);
         const user = await this.userService.getUserById(userId);
         return user;
     }
 
+    @UseGuards(JwtAuthGuard)
+    @Put('profile/changes')
+    updateUser(
+        @Body() updateUserDto: UpdateUserDto,
+        @Req() req
+    ) {
+        console.log('User from request:', req.user);
+        const userId = req.user.id;    
+        if (!userId) {
+            throw new UnauthorizedException('User ID bulunamadı, tekrar giriş yapın.');
+        }
+        return this.userService.updateUser(updateUserDto, userId);
+    }
+    
     @UseGuards(JwtAuthGuard)
     @Put('updateUser')
     @UseInterceptors(
@@ -82,17 +97,17 @@ export class UserController{
             userId
         );
     }
-    
+
     @Put()
-    updatePassword(
-        @Body() updatePasswordDto: UpdatePasswordDto
-    ){
+    updatePassword(@Body() updatePasswordDto: UpdatePasswordDto){
         return this.userService.updatePassword(updatePasswordDto);
     }
 
     @UseGuards(JwtAuthGuard)
     @Get('me/me')
     async getMyProfile(@Req() req) {
+        console.log('Gelen Token:', req.headers.authorization);
+        console.log('getMyProfile - Gelen userId:', req.user?.id);
         const userId = req.user?.id;
         const user = await this.userService.getMyProfile(userId);
         return user;
@@ -104,6 +119,14 @@ export class UserController{
         @Param('username') username: string, 
     ) {
         const user = await this.userService.getProfileByUsername(username);
+        return user;
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete('delete')
+    async deleteAccount(@Req() req) {
+        const userId = req.user.id;
+        const user = await this.userService.deleteAccount(userId);
         return user;
     }
 }

@@ -247,7 +247,6 @@ export class ProgressService {
         }
     
         if (!chapters && !episodes) {
-            console.warn(`No reading progress found for userId: ${userId}`);
             return null;
         }
     

@@ -3,11 +3,11 @@ import { IsDate, IsOptional, IsString,  } from 'class-validator';
 export class UpdateUserDto{
     @IsString()
     @IsOptional()
-    name: string; 
+    name?: string; 
     
     @IsOptional()
     @IsString()
-    about: string; 
+    about?: string; 
 
     @IsOptional()
     @IsString()
@@ -16,4 +16,19 @@ export class UpdateUserDto{
     @IsOptional()
     @IsString()
     profile_image?: string; 
+
+    @IsOptional()
+    birthdate?: Date
+
+    @IsOptional()
+    @IsString()
+    username?: string;
+
+    @IsOptional()
+    @IsString()
+    email?: string;
+
+    @IsOptional()
+    @IsString()
+    password?: string;
 }

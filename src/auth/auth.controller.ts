@@ -12,8 +12,6 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly blacklistService: BlacklistService,
-    private readonly  userService: UserService,
-
   ) {}
 
   @Post('/register')
@@ -49,11 +47,4 @@ export class AuthController {
       user: req.user,
     };
   }
-
-  // @UseGuards(JwtAuthGuard)
-  // @Post('/changepass/:id')
-  // async changePassword(@Param('id') id:string,
-  // @Body('newPass') newPass:string) {
-  //   return this.userService.updatePassword(email);
-  // }
 }

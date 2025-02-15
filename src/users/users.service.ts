@@ -1,14 +1,11 @@
 import { UpdatePasswordDto } from './dto/change-pass.dto';
 import { PasswordService } from './../auth/services/password.service';
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { User } from "@prisma/client";
 import { PrismaService } from "prisma/prisma.service";
 import { CreateUserDto } from "./dto/create-user.dto";
-import { UserDto } from "./dto/user.dto";
 import { MailerService } from 'src/mailer/mailer.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { profile } from 'console';
-
 @Injectable()
 export class UserService {
   constructor(
@@ -23,13 +20,26 @@ export class UserService {
 
   async createUser(createUserDto:CreateUserDto): Promise<User> {
     const defaultImage = "/images/user.jpeg";
+    const defaultBg = "/images/bg.jpg";
     const { email, username, password, birthdate, date, name} = createUserDto;
+
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+          username: username
+      }
+  });
+
+  if (existingUser) {
+    throw new ConflictException('Bu kullanıcı adına ait bir hesap mevcut');
+  }
+
     const birthDateObj = new Date(birthdate);
     const user = await this.prisma.user.create({
       data: {
         email,
         username,
         name,
+        image_background: defaultBg,
         profile_image: defaultImage,
         password,
         birthdate: birthDateObj,
@@ -64,6 +74,9 @@ export class UserService {
         select: {
             id: true,
             username: true,
+            birthdate: true,
+            email: true,
+            password: true,
             profile_image: true,
         },
     });
@@ -71,7 +84,6 @@ export class UserService {
     if (!user) {
         throw new NotFoundException("User not found.");
     }
-
     return user;
   }
 
@@ -110,7 +122,6 @@ export class UserService {
     const {email, pass} = updatePasswordDto;
     const user = await this.getUserByEmail(email);
     const hashedPass = await this.passwordService.hashPassword(pass);
-    
     await this.prisma.user.update({
       where: { email: user.email},
       data: { password: hashedPass },
@@ -135,6 +146,36 @@ export class UserService {
     return user;
   }
 
+  async updateUser(updateUserDto: UpdateUserDto, userId: number) {
+    console.log('adldkfna');
+    const { username, email, birthdate } = updateUserDto;
+
+    const existingUser = await this.prisma.user.findUnique({
+        where: { id: userId }
+    });
+
+    if (!existingUser) {
+        throw new NotFoundException('Kullanıcı bulunamadı.');
+    }
+
+    const updateData: any = {};
+    if (username) updateData.username = username;
+    if (email) updateData.email = email;
+    if (birthdate) updateData.birthdate = new Date(birthdate); 
+
+    try {
+        const user = await this.prisma.user.update({
+            where: { id: userId },
+            data: updateData
+        });
+
+        return user;
+    } catch (error) {
+        console.error("Güncelleme hatası:", error);
+        throw new InternalServerErrorException('Güncelleme başarısız!');
+    }
+  }
+
   async getProfileByUsername(username: string) {
     const user = await this.prisma.user.findUnique({
       where: { username },
@@ -155,11 +196,19 @@ export class UserService {
     });
     const formattedUser = {
       ...user,
+      name: user.name || '',
       image_background: user.image_background || '',
       profile_image: user.profile_image || '',
       followersCount: user?._count?.followers || 0,
       followingCount: user?._count?.following || 0,
     };
     return formattedUser;
+  }
+
+  async deleteAccount(userId: number) {
+    const user = await this.prisma.user.delete({
+      where: { id: userId },
+    });
+    return user;
   }
 }

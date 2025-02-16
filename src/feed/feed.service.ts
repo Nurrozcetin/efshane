@@ -54,13 +54,13 @@ export class FeedService{
                 }
             },
         });
-
+    
         return posts.map(post => ({
             ...post,
             analysis: post.analysis[0],
             comments: post.comments[0],
             isLiked: post.like.length > 0, 
-            isReposted: post.repost.length > 0,
+            isRepostedByUser: post.repost.length > 0,  
         }));
     }
 
@@ -358,36 +358,6 @@ export class FeedService{
             replies: comment.replies || [],
         }));
     }
-    
-    async getRepliesForComment(commentId: string) {
-        const commentID = parseInt(commentId, 10);
-        const replies = await this.prismaService.comments.findMany({
-            where: { parentCommentId: commentID },
-            include: {
-                user: {
-                    select: {
-                        username: true,
-                        profile_image: true,
-                    },
-                },
-                like: true,
-                analysis: {
-                    select: {
-                        like_count: true,
-                        comment_count: true,
-                    }
-                },
-            },
-        });
-
-        return replies.map(reply => ({
-            ...reply,
-            like: true,
-            analysis: reply.analysis[0],
-            isLiked: reply.like.length > 0, 
-            replies: this.getRepliesForComment(reply.id.toString()),
-        }));
-    }    
 
     async sendComment(postId: string, content: string, userId: number) {
         const postID = parseInt(postId, 10);
@@ -450,11 +420,47 @@ export class FeedService{
         };
     }
     
+    async getRepliesForComment(commentId: string) {
+        const commentID = parseInt(commentId, 10);
+        const replies = await this.prismaService.comments.findMany({
+            where: { parentCommentId: commentID },
+            include: {
+                user: {
+                    select: {
+                        username: true,
+                        profile_image: true,
+                    },
+                },
+                like: true,
+                analysis: {
+                    select: {
+                        like_count: true,
+                        comment_count: true,
+                    }
+                },
+            },
+        });
+
+        return replies.map(reply => ({
+            id: reply.id,
+            content: reply.content, 
+            publish_date: reply.publish_date,
+            user: {
+                username: reply.user?.username,
+                profile_image: reply.user?.profile_image,
+            },
+            like_count: reply.like.length,
+            analysis: reply.analysis.length > 0 ? reply.analysis[0] : null,
+            isLiked: reply.like.length > 0, 
+        }));
+    }   
+
     async reply(parentCommentId: string, content: string, userId: number) {
         const parentCommentID = parseInt(parentCommentId, 10);
     
         const parentComment = await this.prismaService.comments.findUnique({
             where: { id: parentCommentID },
+            include: { post: true }
         });
     
         if (!parentComment) {
@@ -483,20 +489,15 @@ export class FeedService{
             where: { commentId: parentCommentID },
         });
     
-        let updatedReplyCount;
-        if (analysis) {
-            const updatedAnalysis = await this.prismaService.analysis.update({
-                where: { id: analysis.id },
-                data: {
-                    comment_count: { increment: 1 },
-                },
+        if (parentComment.postId) {
+            await this.prismaService.analysis.updateMany({
+                where: { postId: parentComment.postId },
+                data: { comment_count: { increment: 1 } },
             });
-            updatedReplyCount = updatedAnalysis.comment_count;
         }
     
         return {
             reply,
-            comment_count: updatedReplyCount || 0,
             message: 'Yanıt başarıyla eklendi.',
         };
     }

@@ -79,7 +79,7 @@ model Post {
   analysis          Analysis[]
   comments          Comments[]
   like              Like[]
-  repost             Repost[]
+  repost            Repost[]
 }
 model Announcement {
   id          Int     @default(autoincrement()) @id

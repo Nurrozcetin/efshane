@@ -90,6 +90,20 @@ export class FeedController{
     }
 
     @UseGuards(JwtAuthGuard)
+    @Get('comments/:postId')
+    async getCommentsForPost(
+        @Param('postId') postId: string) {
+            const comments = await this.feedService.getCommentsForPost(postId);
+            return Array.isArray(comments) ? comments : [];
+    }
+
+    @Get('reply/replys/:commentId')
+    async getRepliesForComment(
+        @Param('commentId') commentId: string) {
+        return this.feedService.getRepliesForComment(commentId);
+    }
+    
+    @UseGuards(JwtAuthGuard)
     @Post('comments/:parentCommentId')
     async reply(
         @Param('parentCommentId') parentCommentId: string,
@@ -101,21 +115,6 @@ export class FeedController{
     }
 
     @UseGuards(JwtAuthGuard)
-    @Get('comments/:postId')
-    async getCommentsForPost(
-        @Param('postId') postId: string) {
-            const comments = await this.feedService.getCommentsForPost(postId);
-            return Array.isArray(comments) ? comments : [];
-    }
-
-    @UseGuards(JwtAuthGuard)
-    @Get('reply/replys/:commentId')
-    async getRepliesForComment(
-        @Param('commentId') commentId: string) {
-        return this.feedService.getRepliesForComment(commentId);
-    }
-
-    @UseGuards(JwtAuthGuard)
     @Post('comment/like/:commentId')
     async likeComment(
         @Param('commentId') commentId: string, 
@@ -124,5 +123,4 @@ export class FeedController{
         const userId = req.user.id; 
         return this.feedService.likeComment(commentId, userId);
     }
-
 }

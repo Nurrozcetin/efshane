@@ -456,12 +456,12 @@ export class EpisodeService {
             throw new BadRequestException('Audio file does not exist at the specified path.');
         }
 
-        const transcribe = await axios.post('https://7ad7-34-46-82-119.ngrok-free.app/speech_to_text', {
+        const transcribe = await axios.post('https://8644-35-185-112-57.ngrok-free.app/speech_to_text', {
             audioFile: fs.createReadStream(audioFilePath) 
         }, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 1200000 });
 
         
-        const analyze = await axios.post('https://7ad7-34-46-82-119.ngrok-free.app/analyze', {
+        const analyze = await axios.post('https://8644-35-185-112-57.ngrok-free.app/analyze', {
             text: transcribe.data.transcription,
         }, { timeout: 90000 });
         
@@ -480,7 +480,7 @@ export class EpisodeService {
 
             try {
                 const analyzeResponse = await axios.post(
-                    'https://7ad7-34-46-82-119.ngrok-free.app/analyze', 
+                    'https://8644-35-185-112-57.ngrok-free.app/analyze', 
                     { text: content }, 
                     { timeout: 90000 }
                 );

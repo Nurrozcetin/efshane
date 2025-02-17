@@ -147,7 +147,7 @@ export class ChapterService{
             throw new ConflictException('A chapter with the same title already exists for this book.');
         }
 
-        const response = await axios.post('https://7ad7-34-46-82-119.ngrok-free.app/analyze', { text: content });
+        const response = await axios.post('https://8644-35-185-112-57.ngrok-free.app/analyze', { text: content });
         if (response.data.is_offensive === 1) {
             throw new BadRequestException('Content contains offensive language and cannot be published.');
         }

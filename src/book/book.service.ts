@@ -975,4 +975,71 @@ export class BookService{
         }
     }
     
+    async updateReadCount(decodedTitle: string) {
+        try {
+            if (!decodedTitle) {
+                throw new BadRequestException("Title parameter is required.");
+            }
+    
+            const normalizeTitle = (title: string) => {
+                return title
+                    .toLowerCase()
+                    .normalize('NFC')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .trim()
+                    .replace(/\s+/g, ' ');
+            };
+    
+            const decodedNormalizedTitle = normalizeTitle(decodedTitle);
+    
+            const books = await this.prisma.book.findMany({
+                where: {
+                    OR: [
+                        { normalizedTitle: decodedNormalizedTitle },
+                        { title: decodedTitle },
+                    ],
+                },
+                include: {
+                    user: true,
+                },
+            });
+    
+            if (!books || books.length === 0) {
+                throw new NotFoundException("This book does not exist or does not belong to the provided username.");
+            }
+    
+            let analysis = await this.prisma.analysis.findFirst({
+                where: { bookId:  books[0].id },
+            });
+    
+            if (!analysis) {
+                analysis = await this.prisma.analysis.create({
+                    data: {
+                        like_count: 0,
+                        comment_count: 0,
+                        read_count: 1,
+                        repost_count: 0,
+                        comment: {
+                            connect: { id:  books[0].id },
+                        },
+                    },
+                });
+            }
+    
+            const updatedAnalysis = await this.prisma.analysis.update({
+                where: { id: analysis.id },
+                data: {
+                    read_count: { increment: 1 },
+                },
+            });
+    
+            return {
+                message: 'Kitap okundu olarak işaretlendi.',
+                read_count: updatedAnalysis.read_count,
+            };
+        } catch (error) {
+            console.error('Kitap detayları alınamadı:', error);
+            throw error; 
+        }
+    } 
 }

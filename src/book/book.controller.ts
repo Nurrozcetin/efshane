@@ -159,4 +159,12 @@ export class  BookController {
         const decodedTitle = decodeURIComponent(bookTitle);
         return this.bookService.toggleLikeBook(decodedTitle, userId);
     }
+
+    @Post('read_count/:bookTitle')
+    async updateReadCount(
+        @Param('bookTitle') bookTitle: string, 
+    ) {
+        const decodedTitle = decodeURIComponent(bookTitle);
+        return this.bookService.updateReadCount(decodedTitle);
+    }
 }

@@ -19,6 +19,13 @@ export class FeedService{
 
     async getFeed(userId: number) {
         const posts = await this.prismaService.post.findMany({
+            where: {
+                hiddenPosts: {
+                    none: {
+                        userId: userId
+                    }
+                },
+            },
             orderBy: { createdAt: 'desc' },
             include: {
                 user: {
@@ -571,4 +578,15 @@ export class FeedService{
             analysis,
         };
     }    
+
+    async hidePost(postId: number, userId: number) {
+        const post = await this.prismaService.hiddenPost.create({
+            data: {
+                userId,
+                postId: postId,
+            },
+        }) 
+        console.log("Ilgili post gizlendi", post);
+        return post;
+    }
 }

@@ -123,4 +123,14 @@ export class FeedController{
         const userId = req.user.id; 
         return this.feedService.likeComment(commentId, userId);
     }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('hide/:postId')
+    async hidePost(
+        @Param('postId') postId: string, 
+        @Req() req
+    ) {
+        const userId = req.user.id;
+        return this.feedService.hidePost(parseInt(postId), userId);
+    }
 }

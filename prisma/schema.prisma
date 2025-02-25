@@ -41,6 +41,7 @@ model User {
   like              Like[]
   repost            Repost[]
   progress          Progress[]
+  hiddenPosts HiddenPost[]
 }
 
 model Book {
@@ -68,6 +69,14 @@ model Book {
   progress          Progress[]
 }
 
+model HiddenPost {
+  id       Int  @id @default(autoincrement())
+  userId   Int
+  postId   Int
+  user     User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post     Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  @@unique([userId, postId])
+}
 model Post {
   id                Int             @default(autoincrement()) @id
   originalPostId    Int?
@@ -80,6 +89,7 @@ model Post {
   comments          Comments[]
   like              Like[]
   repost            Repost[]
+  hiddenPosts HiddenPost[]
 }
 model Announcement {
   id          Int     @default(autoincrement()) @id

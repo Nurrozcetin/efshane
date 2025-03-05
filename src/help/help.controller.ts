@@ -14,6 +14,7 @@ export class HelpController {
         }
         try {
             const result = await this.helpService.getChatResponse(input, content);
+            console.log(result);
             return { updatedContent: `${content} ${result}` };
         } catch (error) {
             return { message: error.message};

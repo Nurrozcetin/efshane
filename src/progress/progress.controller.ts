@@ -11,11 +11,12 @@ export class ProgressController {
     async updateBookProgress(
         @Param('bookTitle') bookTitle: string,
         @Param('chapterId') chapterId: string,
+        @Body('progressPercentage') progressPercentage: number,
         @Req() req: any,
     ) {
         const userId = req.user.id;
         const decodedTitle = decodeURIComponent(bookTitle);
-        return await this.progressService.createOrUpdateBookProgress(parseInt(userId), decodedTitle, parseInt(chapterId));
+        return await this.progressService.createOrUpdateBookProgress(parseInt(userId), decodedTitle, parseInt(chapterId), progressPercentage);
     }
 
     @Get('book/:bookTitle')

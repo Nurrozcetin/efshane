@@ -166,6 +166,7 @@ export class ChapterController {
         const imagePath = image?.path;
         const decodedTitle = decodeURIComponent(bookTitle);
         const decodedChapterTitle = decodeURIComponent(chapterTitle);
+        console.log(imagePath);
         return this.chapterService.saveUpdateChapter(decodedTitle, decodedChapterTitle, {...chapterDto, image: imagePath}, authorId);
     }
 

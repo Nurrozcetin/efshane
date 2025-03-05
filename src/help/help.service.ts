@@ -40,6 +40,7 @@ export class HelpService {
                 },
                 },
             );
+            console.log(response.data.choices[0].message.content);
             return response.data.choices[0].message.content;
         } catch (error) {
             throw new HttpException(

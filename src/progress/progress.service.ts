@@ -8,8 +8,7 @@ export class ProgressService {
         private readonly prisma: PrismaService
     ) {}
 
-    async createOrUpdateBookProgress(userId: number, decodedTitle: string, chapterId: number,
-    ): Promise<Progress> {
+    async createOrUpdateBookProgress(userId: number, decodedTitle: string, chapterId: number, progressPercentage: number): Promise<Progress> {
         const normalizeTitle = (title: string) => {
             return title
                 .toLowerCase()
@@ -75,10 +74,12 @@ export class ProgressService {
                     bookId: book.id,
                     chapterId: chapterId,
                     lastAccessed: new Date(),
+                    progressPercentage,
                 },
                 update: {
                     chapterId: chapterId,
                     lastAccessed: new Date(),
+                    progressPercentage,
                 },
             });
         }else if(audioBook){
@@ -94,10 +95,12 @@ export class ProgressService {
                     audioBookId: audioBook.id,
                     episodeId: chapterId,
                     lastAccessed: new Date(),
+                    progressPercentage,
                 },
                 update: {
                     episodeId: chapterId,
                     lastAccessed: new Date(),
+                    progressPercentage,
                 },
             });
         }
@@ -252,10 +255,9 @@ export class ProgressService {
     
         return {
             book: book ? { id: book.id, title: book.title } : null,
-            chapters: chapters?.chapter || null,
+            chapters: chapters ? { ...chapters.chapter, progressPercentage: chapters.progressPercentage } : null,
             audioBook: audioBook ? { id: audioBook.id, title: audioBook.title } : null,
-            episodes: episodes?.episode || null,
+            episodes: episodes ? { ...episodes.episode, progressPercentage: episodes.progressPercentage } : null,
         };
-    }
-    
+    }    
 }

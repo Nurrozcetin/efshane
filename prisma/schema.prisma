@@ -409,18 +409,19 @@ model ListeningList {
 }
 
 model Progress {
-  id            Int       @id @default(autoincrement())
-  userId        Int
-  bookId        Int?     
-  chapterId     Int?     
-  audioBookId   Int?      
-  episodeId     Int?      
-  lastAccessed  DateTime  @default(now()) 
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book          Book?     @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  chapter       Chapter?  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-  audioBook     AudioBook? @relation(fields: [audioBookId], references: [id], onDelete: Cascade)
-  episode       Episodes? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  id                  Int       @id @default(autoincrement())
+  userId              Int
+  bookId              Int?     
+  chapterId           Int?     
+  audioBookId         Int?      
+  episodeId           Int?      
+  lastAccessed        DateTime  @default(now()) 
+  progressPercentage  Float?  @default(0)
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book                Book?     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  chapter             Chapter?  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  audioBook           AudioBook? @relation(fields: [audioBookId], references: [id], onDelete: Cascade)
+  episode             Episodes? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
   @@unique([userId, bookId]) 
   @@unique([userId, audioBookId])
 }

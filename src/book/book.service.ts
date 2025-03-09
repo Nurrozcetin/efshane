@@ -3,7 +3,6 @@ import { PrismaService } from "prisma/prisma.service";
 import { CreateBookDto } from "./dto/create-book.dto";
 import { UpdateBookDto } from "./dto/update-book.dto";
 import { NotificationsGateway } from "src/notification/notification.gateway";
-import { publish } from "rxjs";
 @Injectable()
 export class BookService{
     constructor(
@@ -20,6 +19,17 @@ export class BookService{
         const existingBookTitle = await this.prisma.book.findUnique({
             where: {
                 title,
+            },
+            include: {
+                readingList: {
+                    select: {
+                        readingList: {
+                            select: {
+                                userId: true,
+                            },
+                        },
+                    },
+                },
             },
         });
     
@@ -784,11 +794,15 @@ export class BookService{
                     },
                     readingList: {
                         select: {
-                            user: {
+                            readingList: {
                                 select: {
-                                    id: true,
-                                },
-                            },
+                                    user: {
+                                        select: {
+                                            id: true,
+                                        }
+                                    }
+                                }
+                            }
                         },
                     },
                     analysis: {
@@ -855,7 +869,7 @@ export class BookService{
             }
 
             return books.map((book) => {
-                const isInReadingList = book.readingList.some(reading => reading.user.id === userId);
+                const isInReadingList = book.readingList.some(reading => reading.readingList.user.id === userId);
                 const isInBookCase = book.bookCase.some(bookCase => bookCase.user.id === userId);
                 const isLiked = book.like.some(like => like.id === userId);
 

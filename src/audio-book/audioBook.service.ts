@@ -214,11 +214,15 @@ export class AudioBookService{
                             }
                         }
                     },
-                    listeningList: {
+                    readingList: {
                         select: {
-                            user: {
+                            readingList: {
                                 select: {
-                                    id: true,
+                                    user: {
+                                        select: {
+                                            id: true,
+                                        },
+                                    },
                                 },
                             },
                         },
@@ -275,7 +279,7 @@ export class AudioBookService{
             });  
 
             return audioBooks.map((book) => {
-                const isInListeningList = book.listeningList.some(listening => listening.user.id === userId);
+                const isInListeningList = book.readingList.some(listening => listening.readingList.user.id === userId);
                 const isAudioBookCase = book.audioBookCase.some(bookCase => bookCase.user.id === userId);
     
                 return {

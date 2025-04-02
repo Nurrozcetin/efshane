@@ -24,7 +24,7 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Yapay zeka destekli kullanıcıların kitap, okuma, yazma, seslendirme ve dinleme deneyimlerini artıran, "Efso" yapay zeka destek aracı ile kullanıcıların yazma deneyimini artıran, TTS teknolojisiyle de kitapları sesli kitaplara dönüştürebilmeyi sağlayan NestJs, ReactJs, PostgreSQL, Docker, Prisma, FastApi gibi teknolojilerin kullanıldığı bir web platformudur.
 
 ## Installation
 
